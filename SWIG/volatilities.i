@@ -437,6 +437,33 @@ class BlackConstantVol : public BlackVolTermStructure {
                      const DayCounter& dayCounter);
 };
 
+// My New Custom Vol Surface (pedagogical example)
+%{
+using QuantLib::MyNewVolSurface;
+%}
+
+%shared_ptr(MyNewVolSurface);
+class MyNewVolSurface : public BlackVolTermStructure {
+  public:
+    MyNewVolSurface(const Date& referenceDate,
+                    const Calendar& calendar,
+                    Volatility volatility,
+                    const DayCounter& dayCounter);
+    MyNewVolSurface(const Date& referenceDate,
+                    const Calendar& calendar,
+                    const Handle<Quote>& volatility,
+                    const DayCounter& dayCounter);
+    MyNewVolSurface(Natural settlementDays,
+                    const Calendar& calendar,
+                    Volatility volatility,
+                    const DayCounter& dayCounter);
+    MyNewVolSurface(Natural settlementDays,
+                    const Calendar& calendar,
+                    const Handle<Quote>& volatility,
+                    const DayCounter& dayCounter);
+    Volatility baseVolatility() const;
+};
+
 // Black ATM curve
 
 %{
