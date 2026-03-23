@@ -464,6 +464,63 @@ class MyNewVolSurface : public BlackVolTermStructure {
     Volatility baseVolatility() const;
 };
 
+// eSSVI volatility term structure (Mingone 2022)
+
+%{
+#include <ql/termstructures/volatility/equityfx/essvihelpers.hpp>
+#include <ql/termstructures/volatility/equityfx/essvivoltermstructure.hpp>
+using QuantLib::EssviSliceParams;
+using QuantLib::EssviButterflyCondition;
+using QuantLib::EssviVolatilityTermStructure;
+%}
+
+struct EssviSliceParams {
+    Real theta;
+    Real rho;
+    Real psi;
+    Real phi() const;
+};
+
+%template(EssviSliceParamsVector) std::vector<EssviSliceParams>;
+
+struct EssviButterflyCondition {
+    enum Type { GatheralJacquier, MartiniMingone };
+};
+
+%shared_ptr(EssviVolatilityTermStructure);
+class EssviVolatilityTermStructure : public BlackVolTermStructure {
+  public:
+    // Native per-slice parameters constructor
+    EssviVolatilityTermStructure(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<Real>& thetas,
+        const std::vector<Real>& rhos,
+        const std::vector<Real>& psis,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        const DayCounter& dc = Actual365Fixed());
+
+    // Global arb-free parameters constructor
+    EssviVolatilityTermStructure(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<Real>& rhos,
+        Real theta1,
+        const std::vector<Real>& as,
+        const std::vector<Real>& cs,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        EssviButterflyCondition::Type bflyType
+            = EssviButterflyCondition::GatheralJacquier,
+        const DayCounter& dc = Actual365Fixed());
+
+    Size numSlices() const;
+    const std::vector<EssviSliceParams>& slices() const;
+};
+
 // Black ATM curve
 
 %{
