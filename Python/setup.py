@@ -79,6 +79,13 @@ def include_dirs():
 
         include_dirs += [arg[2:] for arg in ql_compile_args if arg.startswith("-I")]
 
+    # numpy headers for batch array returns
+    try:
+        import numpy
+        include_dirs += [numpy.get_include()]
+    except ImportError:
+        pass
+
     return include_dirs
 
 

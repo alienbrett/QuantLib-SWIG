@@ -464,6 +464,29 @@ class MyNewVolSurface : public BlackVolTermStructure {
     Volatility baseVolatility() const;
 };
 
+// Size vector for batch eSSVI evaluation
+%template(SizeVector) std::vector<Size>;
+
+// Numpy output typemap for batch eSSVI methods.
+// Converts std::vector<Real> return values directly to numpy arrays
+// via memcpy instead of per-element Python iteration.
+%{
+#include <numpy/arrayobject.h>
+%}
+%init %{
+    import_array();
+%}
+
+%typemap(out) std::vector<Real> batchBlackVol,
+              std::vector<Real> batchImpliedVolGlobalGradient {
+    npy_intp dims[1] = { static_cast<npy_intp>($1.size()) };
+    $result = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
+    if ($result && $1.size() > 0) {
+        memcpy(PyArray_DATA((PyArrayObject*)$result), $1.data(),
+               $1.size() * sizeof(double));
+    }
+}
+
 // eSSVI volatility term structure (Mingone 2022)
 
 %{
@@ -561,6 +584,18 @@ class EssviVolatilityTermStructure : public BlackVolTermStructure {
         const EssviGlobalParams& gp,
         EssviButterflyCondition::Type bflyCond
             = EssviButterflyCondition::GatheralJacquier) const;
+
+    // Batch evaluation
+    std::vector<Real> batchBlackVol(
+        const std::vector<Size>& sliceIndices,
+        const std::vector<Real>& strikes) const;
+
+    std::vector<Real> batchImpliedVolGlobalGradient(
+        const std::vector<Size>& sliceIndices,
+        const std::vector<Real>& strikes,
+        const EssviGlobalParams& gp,
+        EssviButterflyCondition::Type bflyCond
+            = EssviButterflyCondition::GatheralJacquier) const;
 };
 
 %shared_ptr(EssviLocalVolSurface);
@@ -571,6 +606,183 @@ class EssviLocalVolSurface : public LocalVolTermStructure {
         const Handle<YieldTermStructure>& riskFreeRate,
         const Handle<YieldTermStructure>& dividendYield,
         const Handle<Quote>& spot);
+};
+
+// Dual-wing eSSVI volatility term structure
+
+%{
+#include <ql/termstructures/volatility/equityfx/dualwingessvi.hpp>
+using QuantLib::DualWingEssviSliceParams;
+using QuantLib::DualWingEssviSliceGradient;
+using QuantLib::DualWingEssviGlobalParams;
+using QuantLib::DualWingEssviVolatilityTermStructure;
+%}
+
+struct DualWingEssviSliceParams {
+    Real theta;
+    Real rho;
+    Real psi_lo;
+    Real psi_hi;
+};
+
+%template(DualWingEssviSliceParamsVector) std::vector<DualWingEssviSliceParams>;
+
+struct DualWingEssviSliceGradient {
+    Real dSigma_dTheta;
+    Real dSigma_dRho;
+    Real dSigma_dPsiLo;
+    Real dSigma_dPsiHi;
+};
+
+struct DualWingEssviGlobalParams {
+    std::vector<Real> rhos;
+    Real              theta1;
+    %rename(increments) as;
+    std::vector<Real> as;
+    std::vector<Real> cs_lo;
+    std::vector<Real> cs_hi;
+    Size numSlices() const;
+};
+
+%shared_ptr(DualWingEssviVolatilityTermStructure);
+class DualWingEssviVolatilityTermStructure : public BlackVolTermStructure {
+  public:
+    // Native per-slice dual-wing parameters
+    DualWingEssviVolatilityTermStructure(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<Real>& thetas,
+        const std::vector<Real>& rhos,
+        const std::vector<Real>& psis_lo,
+        const std::vector<Real>& psis_hi,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        const DayCounter& dc = Actual365Fixed());
+
+    // Global arb-free dual-wing parameters
+    DualWingEssviVolatilityTermStructure(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<Real>& rhos,
+        Real theta1,
+        const std::vector<Real>& as,
+        const std::vector<Real>& cs_lo,
+        const std::vector<Real>& cs_hi,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        EssviButterflyCondition::Type bflyType
+            = EssviButterflyCondition::GatheralJacquier,
+        const DayCounter& dc = Actual365Fixed());
+
+    Size numSlices() const;
+    const std::vector<DualWingEssviSliceParams>& slices() const;
+
+    DualWingEssviSliceGradient impliedVolGradient(Size sliceIdx, Real strike) const;
+
+    std::vector<Real> impliedVolGlobalGradient(
+        Size sliceIdx, Real strike,
+        const DualWingEssviGlobalParams& gp,
+        EssviButterflyCondition::Type bflyCond
+            = EssviButterflyCondition::GatheralJacquier) const;
+
+    // Batch evaluation
+    std::vector<Real> batchBlackVol(
+        const std::vector<Size>& sliceIndices,
+        const std::vector<Real>& strikes) const;
+
+    std::vector<Real> batchImpliedVolGlobalGradient(
+        const std::vector<Size>& sliceIndices,
+        const std::vector<Real>& strikes,
+        const DualWingEssviGlobalParams& gp,
+        EssviButterflyCondition::Type bflyCond
+            = EssviButterflyCondition::GatheralJacquier) const;
+};
+
+// Split-rho eSSVI volatility term structure (5 params per slice)
+
+%{
+#include <ql/termstructures/volatility/equityfx/splitrhoessvi.hpp>
+using QuantLib::SplitRhoEssviSliceParams;
+using QuantLib::SplitRhoEssviSliceGradient;
+using QuantLib::SplitRhoEssviGlobalParams;
+using QuantLib::SplitRhoEssviVolatilityTermStructure;
+%}
+
+struct SplitRhoEssviSliceParams {
+    Real theta;
+    Real rho_lo;
+    Real psi_lo;
+    Real rho_hi;
+    Real psi_hi;
+};
+
+%template(SplitRhoEssviSliceParamsVector) std::vector<SplitRhoEssviSliceParams>;
+
+struct SplitRhoEssviSliceGradient {
+    Real dSigma_dTheta;
+    Real dSigma_dRhoLo;
+    Real dSigma_dPsiLo;
+    Real dSigma_dRhoHi;
+    Real dSigma_dPsiHi;
+};
+
+struct SplitRhoEssviGlobalParams {
+    std::vector<Real> rhos_lo;
+    std::vector<Real> rhos_hi;
+    Real              theta1;
+    %rename(increments) as;
+    std::vector<Real> as;
+    std::vector<Real> cs_lo;
+    std::vector<Real> cs_hi;
+    Size numSlices() const;
+};
+
+%shared_ptr(SplitRhoEssviVolatilityTermStructure);
+class SplitRhoEssviVolatilityTermStructure : public BlackVolTermStructure {
+  public:
+    // Native per-slice parameters
+    SplitRhoEssviVolatilityTermStructure(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<Real>& thetas,
+        const std::vector<Real>& rhos_lo,
+        const std::vector<Real>& psis_lo,
+        const std::vector<Real>& rhos_hi,
+        const std::vector<Real>& psis_hi,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        const DayCounter& dc = Actual365Fixed());
+
+    // Global arb-free parameters
+    SplitRhoEssviVolatilityTermStructure(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<Real>& rhos_lo,
+        const std::vector<Real>& rhos_hi,
+        Real theta1,
+        const std::vector<Real>& as,
+        const std::vector<Real>& cs_lo,
+        const std::vector<Real>& cs_hi,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        EssviButterflyCondition::Type bflyType
+            = EssviButterflyCondition::GatheralJacquier,
+        const DayCounter& dc = Actual365Fixed());
+
+    Size numSlices() const;
+    const std::vector<SplitRhoEssviSliceParams>& slices() const;
+
+    SplitRhoEssviSliceGradient impliedVolGradient(Size sliceIdx, Real strike) const;
+
+    std::vector<Real> impliedVolGlobalGradient(
+        Size sliceIdx, Real strike,
+        const SplitRhoEssviGlobalParams& gp,
+        EssviButterflyCondition::Type bflyCond
+            = EssviButterflyCondition::GatheralJacquier) const;
 };
 
 // Black ATM curve
