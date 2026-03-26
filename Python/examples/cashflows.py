@@ -47,18 +47,18 @@ ql.Settings.instance().evaluationDate = today
 
 # %%
 dates = [
-    ql.Date(19,10,2020),
-    ql.Date(19,11,2020),
-    ql.Date(19, 1,2021),
-    ql.Date(19, 4,2021),
-    ql.Date(19,10,2021),
-    ql.Date(19, 4,2022),
-    ql.Date(19,10,2022),
-    ql.Date(19,10,2023),
-    ql.Date(19,10,2025),
-    ql.Date(19,10,2030),
-    ql.Date(19,10,2035),
-    ql.Date(19,10,2040),
+    ql.Date(19, 10, 2020),
+    ql.Date(19, 11, 2020),
+    ql.Date(19, 1, 2021),
+    ql.Date(19, 4, 2021),
+    ql.Date(19, 10, 2021),
+    ql.Date(19, 4, 2022),
+    ql.Date(19, 10, 2022),
+    ql.Date(19, 10, 2023),
+    ql.Date(19, 10, 2025),
+    ql.Date(19, 10, 2030),
+    ql.Date(19, 10, 2035),
+    ql.Date(19, 10, 2040),
 ]
 
 rates = [
@@ -87,9 +87,7 @@ forecast_handle = ql.YieldTermStructureHandle(forecast_curve)
 # We'll use an overnight swap as an example.  We're keeping the initialization simple, but the analysis work in the same way for more complex ones, as well as for other kinds of swaps and bonds (once we extract the cashflows from them using the proper methods).
 
 # %%
-swap = ql.MakeOIS(swapTenor=ql.Period(5, ql.Years),
-                  overnightIndex=ql.Eonia(forecast_handle),
-                  fixedRate=0.002)
+swap = ql.MakeOIS(swapTenor=ql.Period(5, ql.Years), overnightIndex=ql.Eonia(forecast_handle), fixedRate=0.002)
 
 # %% [markdown]
 # ### Cash-flow analysis
@@ -100,8 +98,7 @@ swap = ql.MakeOIS(swapTenor=ql.Period(5, ql.Years),
 fixed_leg = swap.fixedLeg()
 
 # %%
-df = pd.DataFrame([(c.date(), c.amount()) for c in fixed_leg if c.date() > today],
-                  columns=['date', 'amount'])
+df = pd.DataFrame([(c.date(), c.amount()) for c in fixed_leg if c.date() > today], columns=["date", "amount"])
 df
 
 # %% [markdown]
@@ -125,9 +122,14 @@ for cf in fixed_leg:
 # We can now access methods from the coupon class.
 
 # %%
-df = pd.DataFrame([(c.date(), c.amount(), c.rate(), c.accrualStartDate(), c.accrualEndDate(), c.accrualPeriod())
-                   for c in coupons if c.date() > today],
-                  columns=['payment date', 'amount', 'rate', 'start date', 'end date', 'accrual period'])
+df = pd.DataFrame(
+    [
+        (c.date(), c.amount(), c.rate(), c.accrualStartDate(), c.accrualEndDate(), c.accrualPeriod())
+        for c in coupons
+        if c.date() > today
+    ],
+    columns=["payment date", "amount", "rate", "start date", "end date", "accrual period"],
+)
 df
 
 # %%
@@ -148,9 +150,14 @@ for cf in floating_leg:
         coupons.append(c)
 
 # %%
-df = pd.DataFrame([(c.date(), c.amount(), c.rate(), c.accrualStartDate(), c.accrualEndDate(), c.accrualPeriod())
-                   for c in coupons if c.date() > today],
-                  columns=['payment date', 'amount', 'rate', 'start date', 'end date', 'accrual period'])
+df = pd.DataFrame(
+    [
+        (c.date(), c.amount(), c.rate(), c.accrualStartDate(), c.accrualEndDate(), c.accrualPeriod())
+        for c in coupons
+        if c.date() > today
+    ],
+    columns=["payment date", "amount", "rate", "start date", "end date", "accrual period"],
+)
 df
 
 # %%

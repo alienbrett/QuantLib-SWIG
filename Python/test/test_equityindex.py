@@ -58,14 +58,10 @@ class EquityIndexTest(unittest.TestCase):
         """Testing equity index projections"""
         fail_msg = "Failed to calculate the expected index projection."
 
-        self.assertAlmostEqual(
-            self.equity_idx.fixing(VALUATION_DATE), 8690.0, delta=EPSILON, msg=fail_msg
-        )
+        self.assertAlmostEqual(self.equity_idx.fixing(VALUATION_DATE), 8690.0, delta=EPSILON, msg=fail_msg)
 
         future_dt = ql.Date(20, ql.May, 2030)
-        self.assertAlmostEqual(
-            self.equity_idx.fixing(future_dt), 10055.76, delta=EPSILON, msg=fail_msg
-        )
+        self.assertAlmostEqual(self.equity_idx.fixing(future_dt), 10055.76, delta=EPSILON, msg=fail_msg)
 
 
 if __name__ == "__main__":

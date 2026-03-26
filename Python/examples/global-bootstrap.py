@@ -118,7 +118,13 @@ helpers += [ql.FraRateHelper(r / 100.0, i + 1, index) for i, r in enumerate(refM
 swapTenors = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 20, 25, 30, 35, 40, 45, 50]
 helpers += [
     ql.SwapRateHelper(
-        r / 100.0, ql.Period(T, ql.Years), ql.TARGET(), ql.Annual, ql.ModifiedFollowing, ql.Thirty360(ql.Thirty360.BondBasis), index
+        r / 100.0,
+        ql.Period(T, ql.Years),
+        ql.TARGET(),
+        ql.Annual,
+        ql.ModifiedFollowing,
+        ql.Thirty360(ql.Thirty360.BondBasis),
+        index,
     )
     for r, T in zip(refMktRates[13:32], swapTenors)
 ]

@@ -1,18 +1,18 @@
 """
- Copyright (C) 2024 Klaus Spanderen
+Copyright (C) 2024 Klaus Spanderen
 
- This file is part of QuantLib, a free-software/open-source library
- for financial quantitative analysts and developers - http://quantlib.org/
+This file is part of QuantLib, a free-software/open-source library
+for financial quantitative analysts and developers - http://quantlib.org/
 
- QuantLib is free software: you can redistribute it and/or modify it
- under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program; if not, please email
- <quantlib-dev@lists.sf.net>. The license is also available online at
- <https://www.quantlib.org/license.shtml>.
+QuantLib is free software: you can redistribute it and/or modify it
+under the terms of the QuantLib license.  You should have received a
+copy of the license along with this program; if not, please email
+<quantlib-dev@lists.sf.net>. The license is also available online at
+<https://www.quantlib.org/license.shtml>.
 
- This program is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the license for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.
 """
 
 import unittest
@@ -34,16 +34,10 @@ class BasketOptionTest(unittest.TestCase):
         def build_process(s: float, q: float, v: float) -> ql.BlackScholesMertonProcess:
             return ql.BlackScholesMertonProcess(
                 ql.QuoteHandle(ql.SimpleQuote(s)),
-                ql.YieldTermStructureHandle(
-                    ql.FlatForward(self.todaysDate, q, ql.Actual365Fixed())
-                ),
-                ql.YieldTermStructureHandle(
-                    ql.FlatForward(self.todaysDate, 0.05, ql.Actual365Fixed())
-                ),
+                ql.YieldTermStructureHandle(ql.FlatForward(self.todaysDate, q, ql.Actual365Fixed())),
+                ql.YieldTermStructureHandle(ql.FlatForward(self.todaysDate, 0.05, ql.Actual365Fixed())),
                 ql.BlackVolTermStructureHandle(
-                    ql.BlackConstantVol(
-                        self.todaysDate, ql.TARGET(), v, ql.Actual365Fixed()
-                    )
+                    ql.BlackConstantVol(self.todaysDate, ql.TARGET(), v, ql.Actual365Fixed())
                 ),
             )
 
@@ -60,9 +54,7 @@ class BasketOptionTest(unittest.TestCase):
         exercise = ql.EuropeanExercise(self.todaysDate + ql.Period(1, ql.Years))
         payoff = ql.PlainVanillaPayoff(ql.Option.Call, 2.0)
 
-        basket_option = ql.BasketOption(
-            ql.AverageBasketPayoff(payoff, ql.Array([1, -1, -1])), exercise
-        )
+        basket_option = ql.BasketOption(ql.AverageBasketPayoff(payoff, ql.Array([1, -1, -1])), exercise)
 
         expected = 11.932739641
 
@@ -83,9 +75,7 @@ class BasketOptionTest(unittest.TestCase):
         self.assertAlmostEqual(basket_option.NPV(), expected, 1)
 
         basket_option.setPricingEngine(
-            ql.FdndimBlackScholesVanillaEngine(
-                processes_vector, rho, ql.UnsignedIntVector([25, 15, 15]), 15
-            )
+            ql.FdndimBlackScholesVanillaEngine(processes_vector, rho, ql.UnsignedIntVector([25, 15, 15]), 15)
         )
         self.assertAlmostEqual(basket_option.NPV(), expected, 1)
 
@@ -95,13 +85,9 @@ class BasketOptionTest(unittest.TestCase):
         def build_process(s: float, v: float) -> ql.BlackProcess:
             return ql.BlackProcess(
                 ql.QuoteHandle(ql.SimpleQuote(s)),
-                ql.YieldTermStructureHandle(
-                    ql.FlatForward(self.todaysDate, 0.05, ql.Actual365Fixed())
-                ),
+                ql.YieldTermStructureHandle(ql.FlatForward(self.todaysDate, 0.05, ql.Actual365Fixed())),
                 ql.BlackVolTermStructureHandle(
-                    ql.BlackConstantVol(
-                        self.todaysDate, ql.TARGET(), v, ql.Actual365Fixed()
-                    )
+                    ql.BlackConstantVol(self.todaysDate, ql.TARGET(), v, ql.Actual365Fixed())
                 ),
             )
 
@@ -121,9 +107,7 @@ class BasketOptionTest(unittest.TestCase):
         basket_option.setPricingEngine(ql.ChoiBasketEngine(processes_vector, rho_m, 15))
         self.assertAlmostEqual(basket_option.NPV(), expected, 10)
 
-        basket_option.setPricingEngine(
-            ql.DengLiZhouBasketEngine(processes_vector, rho_m)
-        )
+        basket_option.setPricingEngine(ql.DengLiZhouBasketEngine(processes_vector, rho_m))
         self.assertAlmostEqual(basket_option.NPV(), expected, 4)
 
         basket_option.setPricingEngine(ql.KirkEngine(p1, p2, rho))
@@ -133,29 +117,21 @@ class BasketOptionTest(unittest.TestCase):
         self.assertAlmostEqual(basket_option.NPV(), expected, 2)
 
         basket_option.setPricingEngine(
-            ql.OperatorSplittingSpreadEngine(
-                p1, p2, rho, ql.OperatorSplittingSpreadEngine.First
-            )
+            ql.OperatorSplittingSpreadEngine(p1, p2, rho, ql.OperatorSplittingSpreadEngine.First)
         )
         self.assertAlmostEqual(basket_option.NPV(), expected, 1)
 
         basket_option.setPricingEngine(
-            ql.OperatorSplittingSpreadEngine(
-                p1, p2, rho, ql.OperatorSplittingSpreadEngine.Second
-            )
+            ql.OperatorSplittingSpreadEngine(p1, p2, rho, ql.OperatorSplittingSpreadEngine.Second)
         )
         self.assertAlmostEqual(basket_option.NPV(), expected, 2)
 
         basket_option.setPricingEngine(
-            ql.FdndimBlackScholesVanillaEngine(
-                processes_vector, rho_m, ql.UnsignedIntVector([25, 25]), 15
-            )
+            ql.FdndimBlackScholesVanillaEngine(processes_vector, rho_m, ql.UnsignedIntVector([25, 25]), 15)
         )
         self.assertAlmostEqual(basket_option.NPV(), expected, 1)
 
-        basket_option.setPricingEngine(
-            ql.Fd2dBlackScholesVanillaEngine(p1, p2, rho, xGrid=25, yGrid=25, tGrid=15)
-        )
+        basket_option.setPricingEngine(ql.Fd2dBlackScholesVanillaEngine(p1, p2, rho, xGrid=25, yGrid=25, tGrid=15))
         self.assertAlmostEqual(basket_option.NPV(), expected, 1)
 
         basket_option.setPricingEngine(

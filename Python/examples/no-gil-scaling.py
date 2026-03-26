@@ -5,6 +5,7 @@ import time
 import QuantLib as ql
 
 if __name__ == "__main__":
+
     def pricing() -> float:
         todaysDate = ql.Date(15, ql.May, 2025)
         ql.Settings.instance().evaluationDate = todaysDate
@@ -20,8 +21,7 @@ if __name__ == "__main__":
             ql.BlackVolTermStructureHandle(volatility),
         )
         option = ql.VanillaOption(
-            ql.PlainVanillaPayoff(ql.Option.Call, 8.0),
-            ql.EuropeanExercise(ql.Date(17, ql.May, 2026))
+            ql.PlainVanillaPayoff(ql.Option.Call, 8.0), ql.EuropeanExercise(ql.Date(17, ql.May, 2026))
         )
         engine = ql.FdBlackScholesVanillaEngine(process, 100, 8000)
         option.setPricingEngine(engine)
@@ -38,4 +38,4 @@ if __name__ == "__main__":
             for val in retVals:
                 val.result()
 
-        print(f"{w:2} threads, {400/(time.time()-start):5.1f} NPVs per sec")
+        print(f"{w:2} threads, {400 / (time.time() - start):5.1f} NPVs per sec")

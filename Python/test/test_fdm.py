@@ -1,18 +1,18 @@
 """
- Copyright (C) 2020 Klaus Spanderen
+Copyright (C) 2020 Klaus Spanderen
 
- This file is part of QuantLib, a free-software/open-source library
- for financial quantitative analysts and developers - http://quantlib.org/
+This file is part of QuantLib, a free-software/open-source library
+for financial quantitative analysts and developers - http://quantlib.org/
 
- QuantLib is free software: you can redistribute it and/or modify it
- under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program; if not, please email
- <quantlib-dev@lists.sf.net>. The license is also available online at
- <https://www.quantlib.org/license.shtml>.
+QuantLib is free software: you can redistribute it and/or modify it
+under the terms of the QuantLib license.  You should have received a
+copy of the license along with this program; if not, please email
+<quantlib-dev@lists.sf.net>. The license is also available online at
+<https://www.quantlib.org/license.shtml>.
 
- This program is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the license for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.
 """
 
 import math
@@ -29,18 +29,20 @@ class FdmTest(unittest.TestCase):
     def tearDown(self):
         ql.Settings.instance().evaluationDate = ql.Date()
 
-
     def test1dMesher(self):
         """Testing one dimensional mesher"""
 
         m = ql.Concentrating1dMesher(0, 1, 10)
         self.assertEqual(m.size(), 10)
-        for i in range(0,10):
-            self.assertAlmostEqual(m.location(i), i/9.0, 14)
+        for i in range(0, 10):
+            self.assertAlmostEqual(m.location(i), i / 9.0, 14)
 
-        m = ql.Concentrating1dMesher(0, 1, 10,
-            [ql.Concentrating1dMesherPoint(0.75, 0.01,False),
-             ql.Concentrating1dMesherPoint(0.5, 0.01, True)])
+        m = ql.Concentrating1dMesher(
+            0,
+            1,
+            10,
+            [ql.Concentrating1dMesherPoint(0.75, 0.01, False), ql.Concentrating1dMesherPoint(0.5, 0.01, True)],
+        )
 
         self.assertEqual(m.size(), 10)
         self.assertAlmostEqual(m.location(0), 0.0, 14)
@@ -51,7 +53,7 @@ class FdmTest(unittest.TestCase):
         p = [x for x in m.locations() if ql.close_enough(x, 0.75)]
         self.assertEqual(len(p), 0)
 
-        m = ql.Predefined1dMesher([0,2,4])
+        m = ql.Predefined1dMesher([0, 2, 4])
         self.assertEqual(m.size(), 3)
         self.assertEqual(m.location(0), 0)
         self.assertEqual(m.location(1), 2)
@@ -60,8 +62,8 @@ class FdmTest(unittest.TestCase):
     def testFdmLinearOpIterator(self):
         """Testing iterators for linear operators"""
 
-        dim = [2,2,3]
-        pos = [0,0,0]
+        dim = [2, 2, 3]
+        pos = [0, 0, 0]
         idx = 0
         opIter = ql.FdmLinearOpIterator(dim, pos, idx)
 
@@ -77,18 +79,17 @@ class FdmTest(unittest.TestCase):
         self.assertEqual(opIter.notEqual(opIter2), True)
         self.assertEqual(opIter.notEqual(opIter), False)
 
-
     def testFdmLinearOpLayout(self):
         """Testing memory layout for linear operators"""
 
-        dim = [2,2,3]
+        dim = [2, 2, 3]
 
         m = ql.FdmLinearOpLayout(dim)
 
-        self.assertEqual(m.size(), 2*2*3)
+        self.assertEqual(m.size(), 2 * 2 * 3)
         self.assertEqual(m.dim(), (2, 2, 3))
         self.assertEqual(m.spacing(), (1, 2, 4))
-        self.assertEqual(m.index((0,1,2)), 10)
+        self.assertEqual(m.index((0, 1, 2)), 10)
         self.assertEqual(m.neighbourhood(m.begin(), 0, 1), 1)
         self.assertEqual(m.neighbourhood(m.begin(), 2, 2), 8)
         self.assertEqual(m.neighbourhood(m.begin(), 0, 1, 2, 2), 9)
@@ -133,24 +134,23 @@ class FdmTest(unittest.TestCase):
 
             @classmethod
             def apply(self, r):
-                return 2*r
+                return 2 * r
 
             @classmethod
             def apply_mixed(self, r):
-                return 3*r
+                return 3 * r
 
             @classmethod
-            def apply_direction(self, direction , r):
-                return direction*r
+            def apply_direction(self, direction, r):
+                return direction * r
 
             @classmethod
-            def solve_splitting(self, direction , r, s):
-                return direction*s*r
+            def solve_splitting(self, direction, r, s):
+                return direction * s * r
 
             @classmethod
             def preconditioner(self, r, s):
-                return s*r
-
+                return s * r
 
         foo = Foo()
 
@@ -162,17 +162,17 @@ class FdmTest(unittest.TestCase):
         self.assertAlmostEqual(foo.t1, 1.0, 14)
         self.assertAlmostEqual(foo.t2, 2.0, 14)
 
-        r = ql.Array([1,2,3,4])
-        self.assertEqual(c.apply(r), 2*r)
-        self.assertEqual(c.apply_mixed(r), 3*r)
-        self.assertEqual(c.apply_direction(7, r), 7*r)
+        r = ql.Array([1, 2, 3, 4])
+        self.assertEqual(c.apply(r), 2 * r)
+        self.assertEqual(c.apply_mixed(r), 3 * r)
+        self.assertEqual(c.apply_direction(7, r), 7 * r)
 
         s = c.solve_splitting(7, r, 0.5)
         self.assertEqual(len(s), len(r))
         for i, x in enumerate(s):
-            self.assertAlmostEqual(x, 3.5*r[i], 14)
+            self.assertAlmostEqual(x, 3.5 * r[i], 14)
 
-        self.assertEqual(c.preconditioner(r, 4), 4*r)
+        self.assertEqual(c.preconditioner(r, 4), 4 * r)
 
         class Bar:
             @classmethod
@@ -187,7 +187,6 @@ class FdmTest(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             ql.FdmLinearOpCompositeProxy(Bar()).apply_mixed(r)
-
 
     def testFdmBlackScholesOp(self):
         """Testing linear Black-Scholes operator"""
@@ -213,11 +212,10 @@ class FdmTest(unittest.TestCase):
             ql.QuoteHandle(underlying),
             ql.YieldTermStructureHandle(dividendYield),
             ql.YieldTermStructureHandle(riskFreeRate),
-            ql.BlackVolTermStructureHandle(volatility)
+            ql.BlackVolTermStructureHandle(volatility),
         )
 
-        mesher = ql.FdmMesherComposite(
-            ql.FdmBlackScholesMesher(10, process, maturity, strike))
+        mesher = ql.FdmMesherComposite(ql.FdmBlackScholesMesher(10, process, maturity, strike))
 
         op = ql.FdmBlackScholesOp(mesher, process, strike)
         self.assertEqual(op.size(), 1)
@@ -227,12 +225,10 @@ class FdmTest(unittest.TestCase):
         c = [payoff(math.exp(x)) for x in mesher.locations(0)]
         p = op.apply(c)
 
-        e = [ 0.0, 0.0, 0.0, 0.0, 0.0,
-              3.18353, 0.755402, -1.30583, -2.19881, -4.0271 ]
+        e = [0.0, 0.0, 0.0, 0.0, 0.0, 3.18353, 0.755402, -1.30583, -2.19881, -4.0271]
 
         for i, x in enumerate(e):
             self.assertAlmostEqual(x, p[i], 5)
-
 
     def testFdmFirstOrderOperator(self):
         """Testing first order operator"""
@@ -249,7 +245,6 @@ class FdmTest(unittest.TestCase):
 
         for u, v in zip(l, y):
             self.assertAlmostEqual(v, math.cos(u), 4)
-
 
     def testFdmSecondOrderOperator(self):
         """Testing second order operator"""
@@ -268,17 +263,15 @@ class FdmTest(unittest.TestCase):
     def testFdmBoundaryCondition(self):
         """Testing Dirichlet Boundary conditions"""
 
-        m = ql.FdmMesherComposite(
-            ql.Uniform1dMesher(0.0, 1.0, 5))
+        m = ql.FdmMesherComposite(ql.Uniform1dMesher(0.0, 1.0, 5))
 
-        b = ql.FdmDirichletBoundary(
-            m, math.pi, 0, ql.FdmBoundaryCondition.Upper)
+        b = ql.FdmDirichletBoundary(m, math.pi, 0, ql.FdmBoundaryCondition.Upper)
 
         x = ql.Array(len(m.locations(0)), 0.0)
 
         b.applyAfterApplying(x)
 
-        self.assertEqual(list(x), [0,0,0,0, math.pi])
+        self.assertEqual(list(x), [0, 0, 0, 0, math.pi])
 
         s = ql.FdmBoundaryConditionSet()
         s.push_back(b)
@@ -292,7 +285,7 @@ class FdmTest(unittest.TestCase):
             @classmethod
             def applyTo(self, a, t):
                 for i in range(5):
-                    a[i] = t+1.0
+                    a[i] = t + 1.0
 
         m = ql.FdmStepConditionProxy(Foo())
 
@@ -313,16 +306,16 @@ class FdmTest(unittest.TestCase):
 
             @classmethod
             def avgInnerValue(self, opIter, t):
-                return opIter.index() + 2*t
+                return opIter.index() + 2 * t
 
         m = ql.FdmInnerValueCalculatorProxy(Foo())
 
-        dim = [2,2,3]
-        pos = [0,0,0]
+        dim = [2, 2, 3]
+        pos = [0, 0, 0]
 
         opIter = ql.FdmLinearOpIterator(dim, pos, 0)
 
-        while (opIter.index() < 2*2*3):
+        while opIter.index() < 2 * 2 * 3:
             idx = opIter.index()
 
             self.assertEqual(m.innerValue(opIter, 2.0), idx + 2.0)
@@ -330,12 +323,10 @@ class FdmTest(unittest.TestCase):
 
             opIter.increment()
 
-
     def testFdmLogInnerValueCalculator(self):
         """Testing log inner value calculator"""
 
-        m = ql.FdmMesherComposite(
-            ql.Uniform1dMesher(math.log(50), math.log(150), 11))
+        m = ql.FdmMesherComposite(ql.Uniform1dMesher(math.log(50), math.log(150), 11))
 
         p = ql.PlainVanillaPayoff(ql.Option.Call, 100)
 
@@ -343,10 +334,9 @@ class FdmTest(unittest.TestCase):
 
         opIter = m.layout().begin()
         while opIter.notEqual(m.layout().end()):
-            x = math.exp(m.location(opIter, 0));
+            x = math.exp(m.location(opIter, 0))
             self.assertAlmostEqual(p(x), v.innerValue(opIter, 1.0), 14)
             opIter.increment()
-
 
     def testAmericanOptionPricing(self):
         """Testing Black-Scholes and Heston American Option pricing"""
@@ -360,10 +350,8 @@ class FdmTest(unittest.TestCase):
 
         dc = ql.Actual365Fixed()
 
-        riskFreeRate = ql.YieldTermStructureHandle(
-            ql.FlatForward(todaysDate, 0.06, dc))
-        dividendYield = ql.YieldTermStructureHandle(
-            ql.FlatForward(todaysDate, 0.02, dc))
+        riskFreeRate = ql.YieldTermStructureHandle(ql.FlatForward(todaysDate, 0.06, dc))
+        dividendYield = ql.YieldTermStructureHandle(ql.FlatForward(todaysDate, 0.02, dc))
 
         strike = 110.0
         payoff = ql.PlainVanillaPayoff(ql.Option.Put, strike)
@@ -377,22 +365,17 @@ class FdmTest(unittest.TestCase):
         volatility = ql.BlackConstantVol(todaysDate, ql.TARGET(), 0.20, dc)
 
         process = ql.BlackScholesMertonProcess(
-            spot, dividendYield, riskFreeRate,
-            ql.BlackVolTermStructureHandle(volatility)
+            spot, dividendYield, riskFreeRate, ql.BlackVolTermStructureHandle(volatility)
         )
 
         option = ql.VanillaOption(payoff, exercise)
-        option.setPricingEngine(ql.FdBlackScholesVanillaEngine.make(
-            process, xGrid = xSteps, tGrid = tSteps,
-            dampingSteps = dampingSteps)
+        option.setPricingEngine(
+            ql.FdBlackScholesVanillaEngine.make(process, xGrid=xSteps, tGrid=tSteps, dampingSteps=dampingSteps)
         )
 
         expected = option.NPV()
 
-        equityMesher = ql.FdmBlackScholesMesher(
-            xSteps, process, maturity,
-            strike, cPoint = (strike, 0.1)
-        )
+        equityMesher = ql.FdmBlackScholesMesher(xSteps, process, maturity, strike, cPoint=(strike, 0.1))
 
         mesher = ql.FdmMesherComposite(equityMesher)
 
@@ -404,7 +387,7 @@ class FdmTest(unittest.TestCase):
         rhs = []
         layout = mesher.layout()
         opIter = layout.begin()
-        while (opIter.notEqual(layout.end())):
+        while opIter.notEqual(layout.end()):
             x.append(mesher.location(opIter, 0))
             rhs.append(innerValueCalculator.avgInnerValue(opIter, maturity))
             opIter.increment()
@@ -413,8 +396,7 @@ class FdmTest(unittest.TestCase):
 
         bcSet = ql.FdmBoundaryConditionSet()
         stepCondition = ql.FdmStepConditionComposite.vanillaComposite(
-            ql.DividendSchedule(), exercise, mesher,
-            innerValueCalculator, todaysDate, dc
+            ql.DividendSchedule(), exercise, mesher, innerValueCalculator, todaysDate, dc
         )
 
         # only to test an Operator defined in python
@@ -437,16 +419,13 @@ class FdmTest(unittest.TestCase):
             def solve_splitting(self, i, r, s):
                 return self.op.solve_splitting(i, r, s)
 
-
         proxyOp = ql.FdmLinearOpCompositeProxy(OperatorProxy(op))
 
-        solver = ql.FdmBackwardSolver(
-            proxyOp, bcSet, stepCondition, ql.FdmSchemeDesc.Douglas()
-        )
+        solver = ql.FdmBackwardSolver(proxyOp, bcSet, stepCondition, ql.FdmSchemeDesc.Douglas())
 
         solver.rollback(rhs, maturity, 0.0, tSteps, dampingSteps)
 
-        spline = ql.CubicNaturalSpline(x, rhs);
+        spline = ql.CubicNaturalSpline(x, rhs)
 
         logS = math.log(spot.value())
 
@@ -455,36 +434,31 @@ class FdmTest(unittest.TestCase):
         self.assertAlmostEqual(calculated, expected, 1)
 
         solverDesc = ql.FdmSolverDesc(
-            mesher, bcSet, stepCondition, innerValueCalculator,
-            maturity, tSteps, dampingSteps)
+            mesher, bcSet, stepCondition, innerValueCalculator, maturity, tSteps, dampingSteps
+        )
 
-        calculated = ql.Fdm1DimSolver(
-            solverDesc, ql.FdmSchemeDesc.Douglas(), op).interpolateAt(logS)
+        calculated = ql.Fdm1DimSolver(solverDesc, ql.FdmSchemeDesc.Douglas(), op).interpolateAt(logS)
 
         self.assertAlmostEqual(calculated, expected, 2)
 
-        v0 = 0.4*0.4
+        v0 = 0.4 * 0.4
         kappa = 1.0
         theta = v0
         sigma = 1e-4
         rho = 0.0
 
-        hestonProcess = ql.HestonProcess(
-            riskFreeRate, dividendYield,
-            spot, v0, kappa, theta, sigma, rho)
+        hestonProcess = ql.HestonProcess(riskFreeRate, dividendYield, spot, v0, kappa, theta, sigma, rho)
 
         leverageFct = ql.LocalVolSurface(
-            ql.BlackVolTermStructureHandle(
-                ql.BlackConstantVol(todaysDate, ql.TARGET(), 0.50, dc)),
+            ql.BlackVolTermStructureHandle(ql.BlackConstantVol(todaysDate, ql.TARGET(), 0.50, dc)),
             riskFreeRate,
             dividendYield,
-            spot.value()
+            spot.value(),
         )
 
         vSteps = 3
 
-        vMesher = ql.FdmHestonLocalVolatilityVarianceMesher(
-            vSteps, hestonProcess, leverageFct, maturity)
+        vMesher = ql.FdmHestonLocalVolatilityVarianceMesher(vSteps, hestonProcess, leverageFct, maturity)
 
         avgVolaEstimate = vMesher.volaEstimate()
 
@@ -495,20 +469,16 @@ class FdmTest(unittest.TestCase):
         innerValueCalculator = ql.FdmLogInnerValue(payoff, mesher, 0)
 
         stepCondition = ql.FdmStepConditionComposite.vanillaComposite(
-            ql.DividendSchedule(), exercise, mesher,
-            innerValueCalculator, todaysDate, dc
+            ql.DividendSchedule(), exercise, mesher, innerValueCalculator, todaysDate, dc
         )
 
         solverDesc = ql.FdmSolverDesc(
-            mesher, bcSet, stepCondition, innerValueCalculator,
-            maturity, tSteps, dampingSteps)
+            mesher, bcSet, stepCondition, innerValueCalculator, maturity, tSteps, dampingSteps
+        )
 
-        calculated = ql.FdmHestonSolver(
-            hestonProcess, solverDesc, leverageFct = leverageFct).valueAt(
-                spot.value(), 0.16)
+        calculated = ql.FdmHestonSolver(hestonProcess, solverDesc, leverageFct=leverageFct).valueAt(spot.value(), 0.16)
 
         self.assertAlmostEqual(calculated, expected, 1)
-
 
     def testBSMRNDCalculator(self):
         """Testing Black-Scholes risk neutral density calculator"""
@@ -516,19 +486,16 @@ class FdmTest(unittest.TestCase):
         dc = ql.Actual365Fixed()
         todaysDate = ql.Date(15, ql.January, 2020)
 
-        r   = 0.0
-        q   = 0.0
+        r = 0.0
+        q = 0.0
         vol = 0.2
-        s0  = 100
+        s0 = 100
 
         process = ql.BlackScholesMertonProcess(
             ql.makeQuoteHandle(s0),
-            ql.YieldTermStructureHandle(
-                ql.FlatForward(todaysDate, q, dc)),
-            ql.YieldTermStructureHandle(
-                ql.FlatForward(todaysDate, r, dc)),
-            ql.BlackVolTermStructureHandle(
-                ql.BlackConstantVol(todaysDate, ql.TARGET(), vol, dc))
+            ql.YieldTermStructureHandle(ql.FlatForward(todaysDate, q, dc)),
+            ql.YieldTermStructureHandle(ql.FlatForward(todaysDate, r, dc)),
+            ql.BlackVolTermStructureHandle(ql.BlackConstantVol(todaysDate, ql.TARGET(), vol, dc)),
         )
 
         rnd = ql.BSMRNDCalculator(process)
@@ -536,17 +503,15 @@ class FdmTest(unittest.TestCase):
         t = 1.2
         x = math.log(80.0)
 
-        mu = math.log(s0) + (r-q-0.5*vol*vol)*t
+        mu = math.log(s0) + (r - q - 0.5 * vol * vol) * t
 
         calculated = rnd.pdf(x, t)
 
         stdev = vol * math.sqrt(t)
 
-        expected = (1.0/(math.sqrt(2*math.pi)*stdev) *
-            math.exp( -0.5*math.pow((x-mu)/stdev, 2.0) ))
+        expected = 1.0 / (math.sqrt(2 * math.pi) * stdev) * math.exp(-0.5 * math.pow((x - mu) / stdev, 2.0))
 
         self.assertAlmostEqual(calculated, expected, 8)
-
 
     def testOrnsteinUhlenbeckVsBachelier(self):
         """Testing Fdm Ornstein-Uhlenbeck pricing"""
@@ -571,58 +536,45 @@ class FdmTest(unittest.TestCase):
         sigma = 20.0
         speed = 5
 
-        pdeEngine = ql.FdOrnsteinUhlenbeckVanillaEngine(
-            ql.OrnsteinUhlenbeckProcess(speed, sigma, x0, x0), rTS, 50
-        )
+        pdeEngine = ql.FdOrnsteinUhlenbeckVanillaEngine(ql.OrnsteinUhlenbeckProcess(speed, sigma, x0, x0), rTS, 50)
 
         option.setPricingEngine(pdeEngine)
         calculated = option.NPV()
 
-        stdev = math.sqrt(sigma*sigma/(2*speed))
+        stdev = math.sqrt(sigma * sigma / (2 * speed))
 
-        expected = ql.bachelierBlackFormula(
-            ql.Option.Put,
-            strike, x0, stdev,
-            rTS.discount(maturityDate)
-        )
+        expected = ql.bachelierBlackFormula(ql.Option.Put, strike, x0, stdev, rTS.discount(maturityDate))
 
         self.assertAlmostEqual(calculated, expected, 2)
-
 
     def testSparseLinearMatrixSolver(self):
         """Testing sparse linear matrix solver"""
 
-        A = ql.Matrix([
-            [1.0, 0.0, 1.0],
-            [0.0, 1.0, 0.5],
-            [1.0, 0.5, 1.0]
-        ])
+        A = ql.Matrix([[1.0, 0.0, 1.0], [0.0, 1.0, 0.5], [1.0, 0.5, 1.0]])
 
-        b = ql.Array([ 1.0, 0.2, 0.5 ])
+        b = ql.Array([1.0, 0.2, 0.5])
 
-        expected = ql.inverse(A)*b
+        expected = ql.inverse(A) * b
 
         def foo(x):
-            return A*x
+            return A * x
 
-        calculated = ql.BiCGstab(
-            ql.MatrixMultiplicationProxy(foo), 100, 1e-6).solve(b)
+        calculated = ql.BiCGstab(ql.MatrixMultiplicationProxy(foo), 100, 1e-6).solve(b)
 
         for i in range(3):
             self.assertAlmostEqual(expected[i], calculated[i], 4)
 
-        calculated = ql.GMRES(
-            ql.MatrixMultiplicationProxy(foo), 100, 1e-6).solve(b)
+        calculated = ql.GMRES(ql.MatrixMultiplicationProxy(foo), 100, 1e-6).solve(b)
 
         for i in range(3):
             self.assertAlmostEqual(expected[i], calculated[i], 4)
 
         def preconditioner(x):
-            return ql.inverse(A)*x
+            return ql.inverse(A) * x
 
         calculated = ql.BiCGstab(
-            ql.MatrixMultiplicationProxy(foo), 100, 1e-6,
-            ql.MatrixMultiplicationProxy(preconditioner)).solve(b)
+            ql.MatrixMultiplicationProxy(foo), 100, 1e-6, ql.MatrixMultiplicationProxy(preconditioner)
+        ).solve(b)
 
         for i in range(3):
             self.assertAlmostEqual(expected[i], calculated[i], 4)
@@ -635,7 +587,7 @@ class FdmTest(unittest.TestCase):
 
         m3 = ql.Glued1dMesher(m1, m2)
 
-        self.assertEqual(m3.locations(), (0,1,2,3,4))
+        self.assertEqual(m3.locations(), (0, 1, 2, 3, 4))
 
     def testFdmZeroInnerValue(self):
         """Testing FdmZeroInnerValue"""

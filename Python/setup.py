@@ -17,7 +17,11 @@
 # FOR A PARTICULAR PURPOSE.  See the license for more details.
 
 
-import os, sys, math, platform, sysconfig
+import os
+import sys
+import math
+import platform
+import sysconfig
 from setuptools import setup, Extension
 from setuptools._distutils.ccompiler import get_default_compiler
 
@@ -27,7 +31,6 @@ def is_debug_quantlib():
 
 
 def define_macros():
-
     define_macros = []
 
     if py_limited_api():
@@ -50,16 +53,13 @@ def define_macros():
     elif compiler == "unix":
         ql_compile_args = os.popen("quantlib-config --cflags").read()[:-1].split()
 
-        define_macros += [
-            (arg[2:], None) for arg in ql_compile_args if arg.startswith("-D")
-        ]
+        define_macros += [(arg[2:], None) for arg in ql_compile_args if arg.startswith("-D")]
         define_macros += [("NDEBUG", None)]
 
     return define_macros
 
 
 def include_dirs():
-
     include_dirs = []
 
     compiler = get_default_compiler()
@@ -72,9 +72,7 @@ def include_dirs():
             print("warning: unable to detect QuantLib installation")
 
         if "INCLUDE" in os.environ:
-            include_dirs += [
-                d.strip() for d in os.environ["INCLUDE"].split(";") if d.strip()
-            ]
+            include_dirs += [d.strip() for d in os.environ["INCLUDE"].split(";") if d.strip()]
 
     elif compiler == "unix":
         ql_compile_args = os.popen("quantlib-config --cflags").read()[:-1].split()
@@ -85,7 +83,6 @@ def include_dirs():
 
 
 def library_dirs():
-
     library_dirs = []
 
     compiler = get_default_compiler()
@@ -110,7 +107,6 @@ def library_dirs():
 
 
 def libraries():
-
     libraries = []
 
     compiler = get_default_compiler()
@@ -124,7 +120,6 @@ def libraries():
 
 
 def extra_compile_args():
-
     extra_compile_args = []
 
     compiler = get_default_compiler()
@@ -150,10 +145,7 @@ def extra_compile_args():
         ql_compile_args = os.popen("quantlib-config --cflags").read()[:-1].split()
 
         extra_compile_args = [
-            arg
-            for arg in ql_compile_args
-            if not arg.startswith("-D")
-            if not arg.startswith("-I")
+            arg for arg in ql_compile_args if not arg.startswith("-D") if not arg.startswith("-I")
         ] + ["-Wno-unused"]
         if "CXXFLAGS" in os.environ:
             extra_compile_args += os.environ["CXXFLAGS"].split()
@@ -162,13 +154,11 @@ def extra_compile_args():
 
 
 def extra_link_args():
-
     extra_link_args = []
 
     compiler = get_default_compiler()
 
     if compiler == "msvc":
-
         dbit = round(math.log(sys.maxsize, 2) + 1)
         if dbit == 64:
             machinetype = "/machine:x64"
@@ -181,12 +171,7 @@ def extra_link_args():
     elif compiler == "unix":
         ql_link_args = os.popen("quantlib-config --libs").read()[:-1].split()
 
-        extra_link_args = [
-            arg
-            for arg in ql_link_args
-            if not arg.startswith("-L")
-            if not arg.startswith("-l")
-        ]
+        extra_link_args = [arg for arg in ql_link_args if not arg.startswith("-L") if not arg.startswith("-l")]
         if "LDFLAGS" in os.environ:
             extra_link_args += os.environ["LDFLAGS"].split()
 

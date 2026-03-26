@@ -786,6 +786,36 @@ class MCAmericanEngine : public PricingEngine {
 #endif
 
 
+// MCAmericanHWBorrowEngine: MC American engine with stochastic rate + borrow
+%{
+using QuantLib::MCAmericanHWBorrowEngine;
+using QuantLib::MCPRAmericanHWBorrowEngine;
+using QuantLib::MCLDAmericanHWBorrowEngine;
+%}
+
+%shared_ptr(MCPRAmericanHWBorrowEngine)
+class MCPRAmericanHWBorrowEngine : public PricingEngine {
+  public:
+    MCPRAmericanHWBorrowEngine(
+        ext::shared_ptr<BlackScholesHWBorrowProcess> process,
+        Size timeSteps,
+        Size requiredSamples,
+        BigInteger seed = 0,
+        bool antitheticVariate = false);
+};
+
+%shared_ptr(MCLDAmericanHWBorrowEngine)
+class MCLDAmericanHWBorrowEngine : public PricingEngine {
+  public:
+    MCLDAmericanHWBorrowEngine(
+        ext::shared_ptr<BlackScholesHWBorrowProcess> process,
+        Size timeSteps,
+        Size requiredSamples,
+        BigInteger seed = 0,
+        bool antitheticVariate = false);
+};
+
+
 %shared_ptr(MCEuropeanHestonEngine<PseudoRandom>);
 %shared_ptr(MCEuropeanHestonEngine<LowDiscrepancy>);
 

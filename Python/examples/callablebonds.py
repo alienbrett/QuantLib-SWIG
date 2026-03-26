@@ -29,7 +29,6 @@
 # FOR A PARTICULAR PURPOSE.  See the license for more details.
 
 import QuantLib as ql
-import numpy as np
 
 calcDate = ql.Date(16, 8, 2006)
 ql.Settings.instance().evaluationDate = calcDate
@@ -41,12 +40,12 @@ term_structure_handle = ql.RelinkableYieldTermStructureHandle(termStructure)
 
 callabilitySchedule = ql.CallabilitySchedule()
 callPrice = 100.0
-callDate = ql.Date(15, ql.September, 2006);
+callDate = ql.Date(15, ql.September, 2006)
 nc = ql.NullCalendar()
 
 # Number of calldates is 24
 for i in range(0, 24):
-    callabilityPrice  = ql.BondPrice(callPrice, ql.BondPrice.Clean)
+    callabilityPrice = ql.BondPrice(callPrice, ql.BondPrice.Clean)
     callabilitySchedule.append(ql.Callability(callabilityPrice, ql.Callability.Call, callDate))
     callDate = nc.advance(callDate, 3, ql.Months)
 
@@ -55,20 +54,31 @@ maturityDate = ql.Date(15, ql.September, 2012)
 calendar = ql.UnitedStates(ql.UnitedStates.GovernmentBond)
 tenor = ql.Period(ql.Quarterly)
 accrualConvention = ql.Unadjusted
-schedule = ql.Schedule(issueDate, maturityDate, tenor, calendar,
-                       accrualConvention, accrualConvention, ql.DateGeneration.Backward, False)
+schedule = ql.Schedule(
+    issueDate, maturityDate, tenor, calendar, accrualConvention, accrualConvention, ql.DateGeneration.Backward, False
+)
 
 settlement_days = 3
 faceAmount = 100
 accrual_daycount = ql.ActualActual(ql.ActualActual.Bond)
 coupon = 0.025
-bond = ql.CallableFixedRateBond(settlement_days, faceAmount, schedule,
-                                [coupon], accrual_daycount, ql.Following,
-                                faceAmount, issueDate, callabilitySchedule)
+bond = ql.CallableFixedRateBond(
+    settlement_days,
+    faceAmount,
+    schedule,
+    [coupon],
+    accrual_daycount,
+    ql.Following,
+    faceAmount,
+    issueDate,
+    callabilitySchedule,
+)
+
 
 def engine(a, s, grid_points):
     model = ql.HullWhite(term_structure_handle, a, s)
     return ql.TreeCallableFixedRateBondEngine(model, grid_points)
+
 
 # 6% mean reversion and 20% volatility
 bond.setPricingEngine(engine(0.06, 0.20, 40))

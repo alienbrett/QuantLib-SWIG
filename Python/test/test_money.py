@@ -10,7 +10,7 @@ class MoneyTest(unittest.TestCase):
         for m1 in (usd(1), usd(2)):
             for m2 in (usd(1), usd(2)):
                 for op in ops:
-                    self.assertEqual(op(m1,  m2), op(m1.value(), m2.value()))
+                    self.assertEqual(op(m1, m2), op(m1.value(), m2.value()))
 
 
 if __name__ == "__main__":

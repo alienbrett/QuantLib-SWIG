@@ -113,9 +113,7 @@ class CashFlowsTest(unittest.TestCase):
         fail_msg = """ Unable to replicate previous cash flow amount:
                             calculated: {actual}
                             expected: {expected}
-                   """.format(
-            actual=actual_amount, expected=expected_amount
-        )
+                   """.format(actual=actual_amount, expected=expected_amount)
         self.assertEqual(actual_amount, expected_amount, msg=fail_msg)
 
     def test_next_cash_flow_amount(self):
@@ -123,15 +121,11 @@ class CashFlowsTest(unittest.TestCase):
         reference_date = ql.Date(21, 6, 2022)
         expected_amount = 1.05e6
         include_settlement_date_flows = False
-        actual_amount = ql.CashFlows.nextCashFlowAmount(
-            self.cash_flows, include_settlement_date_flows, reference_date
-        )
+        actual_amount = ql.CashFlows.nextCashFlowAmount(self.cash_flows, include_settlement_date_flows, reference_date)
         fail_msg = """ Unable to replicate next cash flow amount:
                             calculated: {actual}
                             expected: {expected}
-                   """.format(
-            actual=actual_amount, expected=expected_amount
-        )
+                   """.format(actual=actual_amount, expected=expected_amount)
         self.assertEqual(actual_amount, expected_amount, msg=fail_msg)
 
 
@@ -160,9 +154,7 @@ class IborCouponTest(unittest.TestCase):
             fail_msg = """ Unable to replicate Ibor coupon payment date:
                             calculated: {actual}
                             expected: {expected}
-                       """.format(
-                actual=actual_payment_date, expected=expected_payment_date
-            )
+                       """.format(actual=actual_payment_date, expected=expected_payment_date)
             self.assertEqual(actual_payment_date, expected_payment_date, msg=fail_msg)
 
 
@@ -181,16 +173,12 @@ class OvernightCouponTest(unittest.TestCase):
         leg_with_lag = create_overnight_leg(self.overnight_idx, start, end, pay_lag)
         for c_f_without_lag, c_f_with_lag in zip(leg_without_lag, leg_with_lag):
             actual_payment_date = c_f_with_lag.date()
-            expected_payment_date = CAL.advance(
-                c_f_without_lag.date(), pay_lag, ql.Days, ql.Following
-            )
+            expected_payment_date = CAL.advance(c_f_without_lag.date(), pay_lag, ql.Days, ql.Following)
 
             fail_msg = """ Unable to replicate overnight coupon payment date:
                             calculated: {actual}
                             expected: {expected}
-                       """.format(
-                actual=actual_payment_date, expected=expected_payment_date
-            )
+                       """.format(actual=actual_payment_date, expected=expected_payment_date)
             self.assertEqual(actual_payment_date, expected_payment_date, msg=fail_msg)
 
 
@@ -208,22 +196,16 @@ class FixedRateCouponTest(unittest.TestCase):
         leg_with_lag = create_fixed_rate_leg(start, end, pay_lag)
         for c_f_without_lag, c_f_with_lag in zip(leg_without_lag, leg_with_lag):
             actual_payment_date = c_f_with_lag.date()
-            expected_payment_date = CAL.advance(
-                c_f_without_lag.date(), pay_lag, ql.Days, ql.Following
-            )
+            expected_payment_date = CAL.advance(c_f_without_lag.date(), pay_lag, ql.Days, ql.Following)
 
             fail_msg = """ Unable to replicate fixed rate coupon payment date:
                             calculated: {actual}
                             expected: {expected}
-                       """.format(
-                actual=actual_payment_date, expected=expected_payment_date
-            )
+                       """.format(actual=actual_payment_date, expected=expected_payment_date)
             self.assertEqual(actual_payment_date, expected_payment_date, msg=fail_msg)
 
 
-def create_sub_periods_coupon(
-    ibor_idx, start, end, averaging_method=ql.RateAveraging.Compound
-):
+def create_sub_periods_coupon(ibor_idx, start, end, averaging_method=ql.RateAveraging.Compound):
     reset_schedule = ql.MakeSchedule(
         effectiveDate=start,
         terminationDate=end,
@@ -233,9 +215,7 @@ def create_sub_periods_coupon(
         backwards=True,
     )
     payment_date = reset_schedule[-1]
-    cpn = ql.MultipleResetsCoupon(
-        payment_date, 1.0, reset_schedule, ibor_idx.fixingDays(), ibor_idx
-    )
+    cpn = ql.MultipleResetsCoupon(payment_date, 1.0, reset_schedule, ibor_idx.fixingDays(), ibor_idx)
     if averaging_method == ql.RateAveraging.Compound:
         cpn.setPricer(ql.CompoundingMultipleResetsPricer())
     else:
@@ -295,9 +275,7 @@ class SubPeriodsCouponTest(unittest.TestCase):
 
     def check_single_period_coupon_replication(self, start, end, averaging):
         ibor_leg = create_ibor_leg(self.ibor_idx, start, end)
-        sub_periods_cpn = create_sub_periods_coupon(
-            self.ibor_idx, start, end, averaging
-        )
+        sub_periods_cpn = create_sub_periods_coupon(self.ibor_idx, start, end, averaging)
 
         actual_payment = sub_periods_cpn.amount()
         expected_payment = sum_leg_payments(ibor_leg)
@@ -307,16 +285,12 @@ class SubPeriodsCouponTest(unittest.TestCase):
                             expected: {expected}
                             start: {start}
                             end: {end}
-                   """.format(
-            actual=actual_payment, expected=expected_payment, start=start, end=end
-        )
+                   """.format(actual=actual_payment, expected=expected_payment, start=start, end=end)
         self.assertTrue(abs(actual_payment - expected_payment) < EPSILON, msg=fail_msg)
 
     def check_multiple_compounded_sub_periods_coupon_replication(self, start, end):
         ibor_leg = create_ibor_leg(self.ibor_idx, start, end)
-        sub_periods_cpn = create_sub_periods_coupon(
-            self.ibor_idx, start, end, ql.RateAveraging.Compound
-        )
+        sub_periods_cpn = create_sub_periods_coupon(self.ibor_idx, start, end, ql.RateAveraging.Compound)
 
         actual_payment = sub_periods_cpn.amount()
         expected_payment = compounded_leg_payment(ibor_leg)
@@ -326,16 +300,12 @@ class SubPeriodsCouponTest(unittest.TestCase):
                             expected: {expected}
                             start: {start}
                             end: {end}
-                   """.format(
-            actual=actual_payment, expected=expected_payment, start=start, end=end
-        )
+                   """.format(actual=actual_payment, expected=expected_payment, start=start, end=end)
         self.assertTrue(abs(actual_payment - expected_payment) < EPSILON, msg=fail_msg)
 
     def check_multiple_averaged_sub_periods_coupon_replication(self, start, end):
         ibor_leg = create_ibor_leg(self.ibor_idx, start, end)
-        sub_periods_cpn = create_sub_periods_coupon(
-            self.ibor_idx, start, end, ql.RateAveraging.Simple
-        )
+        sub_periods_cpn = create_sub_periods_coupon(self.ibor_idx, start, end, ql.RateAveraging.Simple)
 
         actual_payment = sub_periods_cpn.amount()
         expected_payment = averaged_leg_payment(ibor_leg)
@@ -345,21 +315,15 @@ class SubPeriodsCouponTest(unittest.TestCase):
                             expected: {expected}
                             start: {start}
                             end: {end}
-                   """.format(
-            actual=actual_payment, expected=expected_payment, start=start, end=end
-        )
+                   """.format(actual=actual_payment, expected=expected_payment, start=start, end=end)
         self.assertTrue(abs(actual_payment - expected_payment) < EPSILON, msg=fail_msg)
 
     def check_sub_periods_leg_replication(self, averaging_method):
         start = ql.Date(18, ql.March, 2021)
         end = ql.Date(18, ql.March, 2022)
 
-        sub_periods_cpn = create_sub_periods_coupon(
-            self.ibor_idx, start, end, averaging_method
-        )
-        sub_periods_leg = create_sub_periods_leg(
-            self.ibor_idx, start, end, ql.Annual, averaging_method
-        )
+        sub_periods_cpn = create_sub_periods_coupon(self.ibor_idx, start, end, averaging_method)
+        sub_periods_leg = create_sub_periods_leg(self.ibor_idx, start, end, ql.Annual, averaging_method)
 
         actual_payment = sum_leg_payments(sub_periods_leg)
         expected_payment = sub_periods_cpn.amount()
@@ -381,9 +345,7 @@ class SubPeriodsCouponTest(unittest.TestCase):
         end = ql.Date(15, ql.October, 2021)
 
         self.check_single_period_coupon_replication(start, end, ql.RateAveraging.Simple)
-        self.check_single_period_coupon_replication(
-            start, end, ql.RateAveraging.Compound
-        )
+        self.check_single_period_coupon_replication(start, end, ql.RateAveraging.Compound)
 
     def test_regular_single_period_coupon_after_fixing(self):
         """Testing regular single period coupon after fixing"""
@@ -391,9 +353,7 @@ class SubPeriodsCouponTest(unittest.TestCase):
         end = ql.Date(12, ql.August, 2021)
 
         self.check_single_period_coupon_replication(start, end, ql.RateAveraging.Simple)
-        self.check_single_period_coupon_replication(
-            start, end, ql.RateAveraging.Compound
-        )
+        self.check_single_period_coupon_replication(start, end, ql.RateAveraging.Compound)
 
     def test_irregular_single_period_coupon_after_fixing(self):
         """Testing irregular single period coupon after fixing"""
@@ -401,9 +361,7 @@ class SubPeriodsCouponTest(unittest.TestCase):
         end = ql.Date(12, ql.June, 2021)
 
         self.check_single_period_coupon_replication(start, end, ql.RateAveraging.Simple)
-        self.check_single_period_coupon_replication(
-            start, end, ql.RateAveraging.Compound
-        )
+        self.check_single_period_coupon_replication(start, end, ql.RateAveraging.Compound)
 
     def test_regular_compounded_forward_starting_coupon_with_multiple_sub_periods(self):
         """Testing regular forward starting coupon with multiple compounded sub-periods"""
@@ -428,40 +386,30 @@ class SubPeriodsCouponTest(unittest.TestCase):
         """Testing casting to sub periods coupon"""
         start = ql.Date(18, ql.March, 2021)
         end = ql.Date(18, ql.March, 2022)
-        sub_periods_leg = create_sub_periods_leg(
-            self.ibor_idx, start, end, ql.Annual, ql.RateAveraging.Compound
-        )
+        sub_periods_leg = create_sub_periods_leg(self.ibor_idx, start, end, ql.Annual, ql.RateAveraging.Compound)
         cf = sub_periods_leg[0]
         self.assertTrue(not isinstance(cf, ql.MultipleResetsCoupon))
-        self.assertTrue(
-            isinstance(ql.as_multiple_resets_coupon(cf), ql.MultipleResetsCoupon)
-        )
+        self.assertTrue(isinstance(ql.as_multiple_resets_coupon(cf), ql.MultipleResetsCoupon))
 
     def test_sub_period_coupon_fixing_dates(self):
         """Testing sub-period coupon fixing dates"""
         start = ql.Date(15, ql.April, 2021)
         end = ql.Date(15, ql.April, 2022)
-        cpn = ql.as_multiple_resets_coupon(
-            create_sub_periods_coupon(self.ibor_idx, start, end)
-        )
+        cpn = ql.as_multiple_resets_coupon(create_sub_periods_coupon(self.ibor_idx, start, end))
         actual_dates = cpn.fixingDates()
         expected_dates = (ql.Date(13, 4, 2021), ql.Date(13, 10, 2021))
 
         fail_msg = """ Unable to replicate sub-period coupon fixing dates:
                             calculated: {actual}
                             expected: {expected}
-                       """.format(
-            actual=actual_dates, expected=expected_dates
-        )
+                       """.format(actual=actual_dates, expected=expected_dates)
         self.assertTupleEqual(actual_dates, expected_dates, msg=fail_msg)
 
     def test_sub_period_coupon_value_dates(self):
         """Testing sub-period coupon value dates"""
         start = ql.Date(15, ql.April, 2021)
         end = ql.Date(15, ql.April, 2022)
-        cpn = ql.as_multiple_resets_coupon(
-            create_sub_periods_coupon(self.ibor_idx, start, end)
-        )
+        cpn = ql.as_multiple_resets_coupon(create_sub_periods_coupon(self.ibor_idx, start, end))
         actual_dates = cpn.valueDates()
         expected_dates = (
             ql.Date(15, 4, 2021),
@@ -472,27 +420,21 @@ class SubPeriodsCouponTest(unittest.TestCase):
         fail_msg = """ Unable to replicate sub-period coupon value dates:
                             calculated: {actual}
                             expected: {expected}
-                       """.format(
-            actual=actual_dates, expected=expected_dates
-        )
+                       """.format(actual=actual_dates, expected=expected_dates)
         self.assertTupleEqual(actual_dates, expected_dates, msg=fail_msg)
 
     def test_sub_period_coupon_rate_spread(self):
         """Testing sub-period coupon rate spread"""
         start = ql.Date(15, ql.April, 2021)
         end = ql.Date(15, ql.April, 2022)
-        cpn = ql.as_multiple_resets_coupon(
-            create_sub_periods_coupon(self.ibor_idx, start, end)
-        )
+        cpn = ql.as_multiple_resets_coupon(create_sub_periods_coupon(self.ibor_idx, start, end))
         actual_spread = cpn.rateSpread()
         expected_spread = 0.0
 
         fail_msg = """ Unable to replicate sub-period coupon rate spread:
                             calculated: {actual}
                             expected: {expected}
-                       """.format(
-            actual=actual_spread, expected=expected_spread
-        )
+                       """.format(actual=actual_spread, expected=expected_spread)
         self.assertEqual(actual_spread, expected_spread, msg=fail_msg)
 
 

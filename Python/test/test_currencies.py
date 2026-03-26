@@ -1,18 +1,18 @@
 """
- Copyright (C) 2021 Marcin Rybacki
+Copyright (C) 2021 Marcin Rybacki
 
- This file is part of QuantLib, a free-software/open-source library
- for financial quantitative analysts and developers - http://quantlib.org/
+This file is part of QuantLib, a free-software/open-source library
+for financial quantitative analysts and developers - http://quantlib.org/
 
- QuantLib is free software: you can redistribute it and/or modify it
- under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program; if not, please email
- <quantlib-dev@lists.sf.net>. The license is also available online at
- <https://www.quantlib.org/license.shtml>.
+QuantLib is free software: you can redistribute it and/or modify it
+under the terms of the QuantLib license.  You should have received a
+copy of the license along with this program; if not, please email
+<quantlib-dev@lists.sf.net>. The license is also available online at
+<https://www.quantlib.org/license.shtml>.
 
- This program is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the license for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.
 """
 
 import unittest
@@ -20,7 +20,6 @@ import QuantLib as ql
 
 
 class CurrencyTest(unittest.TestCase):
-
     def test_default_currency_constructor(self):
         """Testing default currency constructor"""
         fail_msg = "Failed to create default currency."
@@ -36,8 +35,7 @@ class CurrencyTest(unittest.TestCase):
     def test_bespoke_currency_constructor(self):
         """Testing bespoke currency constructor"""
         fail_msg = "Failed to create bespoke currency."
-        custom_ccy = ql.Currency(
-            "CCY", "CCY", 100, "#", "", 100, ql.Rounding())
+        custom_ccy = ql.Currency("CCY", "CCY", 100, "#", "", 100, ql.Rounding())
         self.assertFalse(custom_ccy.empty(), fail_msg)
 
     def test_hash(self):
@@ -52,6 +50,6 @@ class CurrencyTest(unittest.TestCase):
                 self.assertEqual(hash(ccy1) == hash(ccy2), expected)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("testing QuantLib", ql.__version__)
     unittest.main(verbosity=2)

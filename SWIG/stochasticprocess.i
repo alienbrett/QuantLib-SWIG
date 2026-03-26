@@ -425,5 +425,23 @@ class GJRGARCHProcess : public StochasticProcess {
 };
 
 
+// BlackScholesHWBorrowProcess: 3D process (S, r, b) with stochastic rates
+%{
+using QuantLib::BlackScholesHWBorrowProcess;
+%}
+
+%shared_ptr(BlackScholesHWBorrowProcess)
+class BlackScholesHWBorrowProcess : public StochasticProcess {
+  public:
+    BlackScholesHWBorrowProcess(
+        Handle<Quote> spot,
+        Handle<BlackVolTermStructure> volSurface,
+        const ext::shared_ptr<OneFactorAffineModel>& rateModel,
+        const ext::shared_ptr<OneFactorAffineModel>& borrowModel,
+        Handle<Quote> corrEquityRate,
+        Handle<Quote> corrEquityBorrow,
+        Handle<Quote> corrRateBorrow);
+};
+
 
 #endif

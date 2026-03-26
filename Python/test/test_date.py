@@ -1,18 +1,18 @@
 """
- Copyright (C) 2000, 2001, 2002, 2003 RiskMap srl
+Copyright (C) 2000, 2001, 2002, 2003 RiskMap srl
 
- This file is part of QuantLib, a free-software/open-source library
- for financial quantitative analysts and developers - http://quantlib.org/
+This file is part of QuantLib, a free-software/open-source library
+for financial quantitative analysts and developers - http://quantlib.org/
 
- QuantLib is free software: you can redistribute it and/or modify it
- under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program; if not, please email
- <quantlib-dev@lists.sf.net>. The license is also available online at
- <https://www.quantlib.org/license.shtml>.
+QuantLib is free software: you can redistribute it and/or modify it
+under the terms of the QuantLib license.  You should have received a
+copy of the license along with this program; if not, please email
+<quantlib-dev@lists.sf.net>. The license is also available online at
+<https://www.quantlib.org/license.shtml>.
 
- This program is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the license for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.
 """
 
 import datetime
@@ -71,11 +71,10 @@ wrong day, month, year increment
         for date1 in (ql.Date(1, 2, 2020), ql.Date(3, 4, 2022), ql.Date()):
             for date2 in (ql.Date(1, 2, 2020), ql.Date(3, 4, 2022), ql.Date()):
                 for op in ops:
-                    self.assertEqual(op(date1,  date2),
-                                     op(date1.serialNumber(), date2.serialNumber()))
+                    self.assertEqual(op(date1, date2), op(date1.serialNumber(), date2.serialNumber()))
 
     def testHolidayList(self):
-        """ Testing Calendar testHolidayList() method. """
+        """Testing Calendar testHolidayList() method."""
         holidayLstFunction = ql.Calendar.holidayList(ql.Poland(), ql.Date(31, 12, 2014), ql.Date(3, 4, 2015), False)
         holidayLstManual = (ql.Date(1, 1, 2015), ql.Date(6, 1, 2015))
         # check if dates both from function and from manual input are the same
@@ -109,7 +108,7 @@ class PeriodTest(unittest.TestCase):
         for per1 in (ql.Period("1D"), ql.Period("1W"), ql.Period("12M")):
             for per2 in (ql.Period("1D"), ql.Period("1Y")):
                 for op in ops:
-                    self.assertEqual(op(per1,  per2), op(per2.frequency(), per1.frequency()))
+                    self.assertEqual(op(per1, per2), op(per2.frequency(), per1.frequency()))
 
 
 if __name__ == "__main__":

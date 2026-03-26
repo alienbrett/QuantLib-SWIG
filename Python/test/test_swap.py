@@ -100,9 +100,7 @@ class ZeroCouponSwapTest(unittest.TestCase):
         fail_npv_msg = """ Unable to replicate par zero coupon swap NPV:
                             calculated: {actual}
                             expected: {expected}
-                       """.format(
-            actual=npv, expected=0.0
-        )
+                       """.format(actual=npv, expected=0.0)
         self.assertAlmostEqual(npv, 0.0, delta=EPSILON, msg=fail_npv_msg)
 
         fxd_leg_npv = par_swap.fixedLegNPV()
@@ -110,12 +108,8 @@ class ZeroCouponSwapTest(unittest.TestCase):
         fail_legs_npv_msg = """ Unable to replicate the NPVs of a par zero coupon swap legs:
                                  fixed leg NPV: {fxd_leg}
                                  floating leg NPV: {flt_leg}
-                            """.format(
-            fxd_leg=fxd_leg_npv, flt_leg=flt_leg_npv
-        )
-        self.assertAlmostEqual(
-            abs(fxd_leg_npv), abs(flt_leg_npv), delta=EPSILON, msg=fail_legs_npv_msg
-        )
+                            """.format(fxd_leg=fxd_leg_npv, flt_leg=flt_leg_npv)
+        self.assertAlmostEqual(abs(fxd_leg_npv), abs(flt_leg_npv), delta=EPSILON, msg=fail_legs_npv_msg)
 
     def test_npvs_of_par_zero_coupon_swap_with_fixed_rate(self):
         """Testing NPVs of a zero coupon swap with fixed rate"""
@@ -128,9 +122,7 @@ class ZeroCouponSwapTest(unittest.TestCase):
         fail_msg = """ Unable to replicate par zero coupon swap NPV:
                         calculated: {actual}
                         expected: {expected}
-                   """.format(
-            actual=npv, expected=0.0
-        )
+                   """.format(actual=npv, expected=0.0)
         self.assertAlmostEqual(npv, 0.0, delta=EPSILON, msg=fail_msg)
 
     def test_zero_coupon_swap_legs(self):
@@ -140,18 +132,14 @@ class ZeroCouponSwapTest(unittest.TestCase):
         fxd_cf = ql.as_fixed_rate_coupon(fxd_leg[0])
         fail_msg_fxd = """Fixed leg cash flow type should be FixedRateCoupon
                           but was {actual}.
-                       """.format(
-            actual=type(fxd_cf)
-        )
+                       """.format(actual=type(fxd_cf))
         self.assertTrue(isinstance(fxd_cf, ql.FixedRateCoupon), msg=fail_msg_fxd)
 
         flt_leg = swap.floatingLeg()
         flt_cf = ql.as_multiple_resets_coupon(flt_leg[0])
         fail_msg_flt = """Floating leg cash flow type should be MultipleResetsCoupon
                           but was {actual}.
-                       """.format(
-            actual=type(flt_cf)
-        )
+                       """.format(actual=type(flt_cf))
         self.assertTrue(isinstance(flt_cf, ql.MultipleResetsCoupon), msg=fail_msg_flt)
 
 
@@ -220,9 +208,7 @@ class EquityTotalReturnSwapTest(unittest.TestCase):
             "USDLibor3M Actual/360",
             msg=fail_msg,
         )
-        self.assertEqual(
-            trs_vs_sofr.interestRateIndex().name(), "SOFRON Actual/360", msg=fail_msg
-        )
+        self.assertEqual(trs_vs_sofr.interestRateIndex().name(), "SOFRON Actual/360", msg=fail_msg)
 
     def test_trs_npv(self):
         """Testing equity total return swap NPV"""
@@ -237,13 +223,9 @@ class EquityTotalReturnSwapTest(unittest.TestCase):
         trs_vs_sofr = self.build_trs(self.sofr_idx, start, end)
         trs_vs_sofr.setPricingEngine(pricer)
 
-        par_trs_vs_ibor = self.build_trs(
-            self.ibor_idx, start, end, trs_vs_ibor.fairMargin()
-        )
+        par_trs_vs_ibor = self.build_trs(self.ibor_idx, start, end, trs_vs_ibor.fairMargin())
         par_trs_vs_ibor.setPricingEngine(pricer)
-        par_trs_vs_sofr = self.build_trs(
-            self.sofr_idx, start, end, trs_vs_sofr.fairMargin()
-        )
+        par_trs_vs_sofr = self.build_trs(self.sofr_idx, start, end, trs_vs_sofr.fairMargin())
         par_trs_vs_sofr.setPricingEngine(pricer)
 
         fail_msg = "Par TRS expected to have NPV equal to zero."

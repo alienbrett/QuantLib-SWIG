@@ -35,10 +35,7 @@ for owner in copyrights:
 copyrights = [(years, owner) for owner, years in copyrights.items()]
 copyrights.sort()
 
-lines = [
-    "Copyright (C) %s %s" % (", ".join([str(y) for y in years]), owner)
-    for years, owner in copyrights
-]
+lines = ["Copyright (C) %s %s" % (", ".join([str(y) for y in years]), owner) for years, owner in copyrights]
 
 print(
     """

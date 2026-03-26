@@ -33,15 +33,20 @@ import QuantLib as ql
 calcDate = ql.Date(14, 6, 2016)
 ql.Settings.instance().evaluationDate = calcDate
 
-dates = [ql.Date(14,6,2016), ql.Date(14,9,2016),
-         ql.Date(14,12,2016), ql.Date(14,6,2017),
-         ql.Date(14,6,2019), ql.Date(14,6,2021),
-         ql.Date(15,6,2026), ql.Date(16,6,2031),
-         ql.Date(16,6,2036), ql.Date(14,6,2046)]
+dates = [
+    ql.Date(14, 6, 2016),
+    ql.Date(14, 9, 2016),
+    ql.Date(14, 12, 2016),
+    ql.Date(14, 6, 2017),
+    ql.Date(14, 6, 2019),
+    ql.Date(14, 6, 2021),
+    ql.Date(15, 6, 2026),
+    ql.Date(16, 6, 2031),
+    ql.Date(16, 6, 2036),
+    ql.Date(14, 6, 2046),
+]
 
-yields = [0.000000, 0.006616, 0.007049, 0.007795,
-          0.009599, 0.011203, 0.015068, 0.017583,
-          0.018998, 0.020080]
+yields = [0.000000, 0.006616, 0.007049, 0.007795, 0.009599, 0.011203, 0.015068, 0.017583, 0.018998, 0.020080]
 
 dayCount = ql.ActualActual(ql.ActualActual.Bond)
 calendar = ql.UnitedStates(ql.UnitedStates.GovernmentBond)
@@ -52,7 +57,7 @@ term_structure = ql.ZeroCurve(dates, yields, dayCount, calendar, interpolation, 
 ts_handle = ql.YieldTermStructureHandle(term_structure)
 
 start_date = ql.Date(14, 6, 2016)
-end_date = ql.Date(14, 6 , 2026)
+end_date = ql.Date(14, 6, 2026)
 period = ql.Period(3, ql.Months)
 buss_convention = ql.ModifiedFollowing
 rule = ql.DateGeneration.Forward
@@ -60,7 +65,7 @@ end_of_month = False
 schedule = ql.Schedule(start_date, end_date, period, calendar, buss_convention, buss_convention, rule, end_of_month)
 
 iborIndex = ql.USDLibor(ql.Period(3, ql.Months), ts_handle)
-iborIndex.addFixing(ql.Date(10,6,2016), 0.0065560)
+iborIndex.addFixing(ql.Date(10, 6, 2016), 0.0065560)
 ibor_leg = ql.IborLeg([1000000], schedule, iborIndex)
 
 strike = 0.02

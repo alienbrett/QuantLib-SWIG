@@ -469,9 +469,13 @@ class MyNewVolSurface : public BlackVolTermStructure {
 %{
 #include <ql/termstructures/volatility/equityfx/essvihelpers.hpp>
 #include <ql/termstructures/volatility/equityfx/essvivoltermstructure.hpp>
+#include <ql/termstructures/volatility/equityfx/essvilocalvolsurface.hpp>
 using QuantLib::EssviSliceParams;
+using QuantLib::EssviSliceGradient;
+using QuantLib::EssviGlobalParams;
 using QuantLib::EssviButterflyCondition;
 using QuantLib::EssviVolatilityTermStructure;
+using QuantLib::EssviLocalVolSurface;
 %}
 
 struct EssviSliceParams {
@@ -483,6 +487,21 @@ struct EssviSliceParams {
 
 %template(EssviSliceParamsVector) std::vector<EssviSliceParams>;
 
+struct EssviSliceGradient {
+    Real dSigma_dTheta;
+    Real dSigma_dRho;
+    Real dSigma_dPsi;
+};
+
+struct EssviGlobalParams {
+    std::vector<Real> rhos;
+    Real              theta1;
+    %rename(increments) as;
+    std::vector<Real> as;
+    std::vector<Real> cs;
+    Size numSlices() const;
+};
+
 struct EssviButterflyCondition {
     enum Type { GatheralJacquier, MartiniMingone };
 };
@@ -490,7 +509,7 @@ struct EssviButterflyCondition {
 %shared_ptr(EssviVolatilityTermStructure);
 class EssviVolatilityTermStructure : public BlackVolTermStructure {
   public:
-    // Native per-slice parameters constructor
+    // Native per-slice parameters constructor (continuous dividends)
     EssviVolatilityTermStructure(
         const Date& referenceDate,
         const std::vector<Date>& dates,
@@ -501,6 +520,19 @@ class EssviVolatilityTermStructure : public BlackVolTermStructure {
         const Handle<YieldTermStructure>& riskFreeRate,
         const Handle<YieldTermStructure>& dividendYield,
         const DayCounter& dc = Actual365Fixed());
+
+    // Native per-slice parameters with discrete dividends
+    EssviVolatilityTermStructure(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<Real>& thetas,
+        const std::vector<Real>& rhos,
+        const std::vector<Real>& psis,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        const std::vector<ext::shared_ptr<Dividend>>& dividends,
+        const DayCounter& dc);
 
     // Global arb-free parameters constructor
     EssviVolatilityTermStructure(
@@ -519,6 +551,26 @@ class EssviVolatilityTermStructure : public BlackVolTermStructure {
 
     Size numSlices() const;
     const std::vector<EssviSliceParams>& slices() const;
+
+    // Gradient of blackVol w.r.t. native slice params
+    EssviSliceGradient impliedVolGradient(Size sliceIdx, Real strike) const;
+
+    // Gradient of blackVol w.r.t. global params [rhos, theta1, as, cs]
+    std::vector<Real> impliedVolGlobalGradient(
+        Size sliceIdx, Real strike,
+        const EssviGlobalParams& gp,
+        EssviButterflyCondition::Type bflyCond
+            = EssviButterflyCondition::GatheralJacquier) const;
+};
+
+%shared_ptr(EssviLocalVolSurface);
+class EssviLocalVolSurface : public LocalVolTermStructure {
+  public:
+    EssviLocalVolSurface(
+        const ext::shared_ptr<EssviVolatilityTermStructure>& essviSurface,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        const Handle<Quote>& spot);
 };
 
 // Black ATM curve

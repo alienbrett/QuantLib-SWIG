@@ -1,20 +1,20 @@
 """
- Copyright (C) 2000, 2001, 2002, 2003 RiskMap srl
- Copyright (C) 2007 StatPro Italia srl
- Copyright (C) 2020 Marcin Rybacki
+Copyright (C) 2000, 2001, 2002, 2003 RiskMap srl
+Copyright (C) 2007 StatPro Italia srl
+Copyright (C) 2020 Marcin Rybacki
 
- This file is part of QuantLib, a free-software/open-source library
- for financial quantitative analysts and developers - http://quantlib.org/
+This file is part of QuantLib, a free-software/open-source library
+for financial quantitative analysts and developers - http://quantlib.org/
 
- QuantLib is free software: you can redistribute it and/or modify it
- under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program; if not, please email
- <quantlib-dev@lists.sf.net>. The license is also available online at
- <https://www.quantlib.org/license.shtml>.
+QuantLib is free software: you can redistribute it and/or modify it
+under the terms of the QuantLib license.  You should have received a
+copy of the license along with this program; if not, please email
+<quantlib-dev@lists.sf.net>. The license is also available online at
+<https://www.quantlib.org/license.shtml>.
 
- This program is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the license for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.
 """
 
 import QuantLib as ql
@@ -33,17 +33,11 @@ def binaryFunction(x, y):
     return 2.0 * x + y
 
 
-def extrapolatedForwardRate(
-        firstSmoothingPoint,
-        lastLiquidForwardRate,
-        ultimateForwardRate,
-        alpha):
-
+def extrapolatedForwardRate(firstSmoothingPoint, lastLiquidForwardRate, ultimateForwardRate, alpha):
     def calculate(t):
         deltaT = t - firstSmoothingPoint
         beta = (1.0 - math.exp(-alpha * deltaT)) / (alpha * deltaT)
-        return ultimateForwardRate + (
-            lastLiquidForwardRate - ultimateForwardRate) * beta
+        return ultimateForwardRate + (lastLiquidForwardRate - ultimateForwardRate) * beta
 
     return calculate
 
@@ -88,8 +82,7 @@ class TermStructureTest(unittest.TestCase):
         ]
         self.instruments = deposits + swaps
 
-        self.termStructure = ql.PiecewiseFlatForward(
-            self.settlement, self.instruments, self.dayCounter)
+        self.termStructure = ql.PiecewiseFlatForward(self.settlement, self.instruments, self.dayCounter)
 
     def tearDown(self):
         ql.Settings.instance().evaluationDate = ql.Date()
@@ -149,32 +142,21 @@ class TermStructureTest(unittest.TestCase):
         settlement = self.termStructure.referenceDate()
         compounding = ql.Compounded
         freq = ql.Semiannual
-        flatTs = ql.FlatForward(
-            settlement,
-            ql.makeQuoteHandle(0.0085),
-            self.dayCounter)
+        flatTs = ql.FlatForward(settlement, ql.makeQuoteHandle(0.0085), self.dayCounter)
         firstHandle = ql.YieldTermStructureHandle(flatTs)
         secondHandle = ql.YieldTermStructureHandle(self.termStructure)
-        compositeTs = ql.CompositeZeroYieldStructure(
-            firstHandle, secondHandle, binaryFunction, compounding, freq)
+        compositeTs = ql.CompositeZeroYieldStructure(firstHandle, secondHandle, binaryFunction, compounding, freq)
         maturity = settlement + ql.Period(20, ql.Years)
         expectedZeroRate = binaryFunction(
-            firstHandle.zeroRate(
-                maturity, self.dayCounter, compounding, freq).rate(),
-            secondHandle.zeroRate(
-                maturity, self.dayCounter, compounding, freq).rate())
-        actualZeroRate = compositeTs.zeroRate(
-            maturity, self.dayCounter, compounding, freq).rate()
+            firstHandle.zeroRate(maturity, self.dayCounter, compounding, freq).rate(),
+            secondHandle.zeroRate(maturity, self.dayCounter, compounding, freq).rate(),
+        )
+        actualZeroRate = compositeTs.zeroRate(maturity, self.dayCounter, compounding, freq).rate()
         failMsg = """ Composite zero yield structure rate replication failed:
                         expected zero rate: {expected}
                         actual zero rate: {actual}
-                  """.format(expected=expectedZeroRate,
-                             actual=actualZeroRate)
-        self.assertAlmostEqual(
-            first=expectedZeroRate,
-            second=actualZeroRate,
-            delta=1.0e-12,
-            msg=failMsg)
+                  """.format(expected=expectedZeroRate, actual=actualZeroRate)
+        self.assertAlmostEqual(first=expectedZeroRate, second=actualZeroRate, delta=1.0e-12, msg=failMsg)
 
     def testUltimateForwardTermStructure(self):
         """Testing ultimate forward term structure"""
@@ -184,42 +166,35 @@ class TermStructureTest(unittest.TestCase):
         fsp = ql.Period(20, ql.Years)
         alpha = 0.05
         baseCrvHandle = ql.YieldTermStructureHandle(self.termStructure)
-        ufrCrv = ql.UltimateForwardTermStructure(
-            baseCrvHandle, llfr, ufr, fsp, alpha, None)
+        ufrCrv = ql.UltimateForwardTermStructure(baseCrvHandle, llfr, ufr, fsp, alpha, None)
         cutOff = ufrCrv.timeFromReference(settlement + fsp)
-        forwardCalculator = extrapolatedForwardRate(
-            cutOff, llfr.value(), ufr.value(), alpha)
-        times = [ufrCrv.timeFromReference(settlement + ql.Period(x, ql.Years))
-                 for x in [21, 30, 40, 50, 60, 70, 80, 90, 100]]
+        forwardCalculator = extrapolatedForwardRate(cutOff, llfr.value(), ufr.value(), alpha)
+        times = [
+            ufrCrv.timeFromReference(settlement + ql.Period(x, ql.Years))
+            for x in [21, 30, 40, 50, 60, 70, 80, 90, 100]
+        ]
         for t in times:
-            actualForward = ufrCrv.forwardRate(
-                cutOff, t, ql.Continuous, ql.NoFrequency, True).rate()
+            actualForward = ufrCrv.forwardRate(cutOff, t, ql.Continuous, ql.NoFrequency, True).rate()
             expectedForward = forwardCalculator(t)
             failMsg = """ UFR term structure forward replication failed for:
                             time to maturity: {timeToMaturity}
                             expected forward rate: {expected}
                             actual forward rate: {actual}
-                      """.format(timeToMaturity=t,
-                                 expected=expectedForward,
-                                 actual=actualForward)
-            self.assertAlmostEqual(
-                first=expectedForward,
-                second=actualForward,
-                delta=1.0e-12,
-                msg=failMsg)
+                      """.format(timeToMaturity=t, expected=expectedForward, actual=actualForward)
+            self.assertAlmostEqual(first=expectedForward, second=actualForward, delta=1.0e-12, msg=failMsg)
 
     def testTermStructureInterpolationSchemes(self):
         """Testing different interpolation schemes and their consistency"""
         args = [self.settlement, self.instruments, self.dayCounter]
         mapping = [
-            [ql.PiecewiseParabolicCubicZero, 
-             ql.ParabolicCubicZeroCurve, 'Parabolic Zero'],
-            [ql.PiecewiseMonotonicParabolicCubicZero, 
-             ql.MonotonicParabolicCubicZeroCurve, 'Monotone Parabolic Zero'],
-            [ql.PiecewiseLogParabolicCubicDiscount, 
-             ql.LogParabolicCubicDiscountCurve, 'Log Parabolic Discount'],
-            [ql.PiecewiseMonotonicLogParabolicCubicDiscount, 
-             ql.MonotonicLogParabolicCubicDiscountCurve, 'Monotone Log Parabolic Discount'],
+            [ql.PiecewiseParabolicCubicZero, ql.ParabolicCubicZeroCurve, "Parabolic Zero"],
+            [ql.PiecewiseMonotonicParabolicCubicZero, ql.MonotonicParabolicCubicZeroCurve, "Monotone Parabolic Zero"],
+            [ql.PiecewiseLogParabolicCubicDiscount, ql.LogParabolicCubicDiscountCurve, "Log Parabolic Discount"],
+            [
+                ql.PiecewiseMonotonicLogParabolicCubicDiscount,
+                ql.MonotonicLogParabolicCubicDiscountCurve,
+                "Monotone Log Parabolic Discount",
+            ],
         ]
 
         for bootstrap, interp, name in mapping:
@@ -228,47 +203,39 @@ class TermStructureTest(unittest.TestCase):
             equivalent_crv = interp(dates, nodes, self.dayCounter)
 
             for d in dates:
-                expected = equivalent_crv.zeroRate(
-                    d, self.dayCounter, ql.Continuous, ql.NoFrequency).rate()
-                actual = bootstrap_crv.zeroRate(
-                    d, self.dayCounter, ql.Continuous, ql.NoFrequency).rate()
-                
+                expected = equivalent_crv.zeroRate(d, self.dayCounter, ql.Continuous, ql.NoFrequency).rate()
+                actual = bootstrap_crv.zeroRate(d, self.dayCounter, ql.Continuous, ql.NoFrequency).rate()
+
                 failMsg = """ Interpolation check failed for:
                             interpolation: {interpolation}
                             expected zero rate: {expected}
                             actual zero rate: {actual}
-                      """.format(interpolation=name,
-                                 expected=expected,
-                                 actual=actual)
-                self.assertAlmostEqual(
-                    first=expected,
-                    second=actual,
-                    delta=1.0e-12,
-                    msg=failMsg)
+                      """.format(interpolation=name, expected=expected, actual=actual)
+                self.assertAlmostEqual(first=expected, second=actual, delta=1.0e-12, msg=failMsg)
 
     def testInterpolatedPiecewiseZeroSpreadedTermStructure(self):
         """Testing different interpolation schemes for zero spreaded term structure"""
         h = ql.RelinkableYieldTermStructureHandle()
         h.linkTo(self.termStructure)
         spreads = [(1, 0.005), (2, 0.008), (3, 0.0103), (4, 0.0145), (5, 0.025)]
-        dates, quotes = zip(*[(h.referenceDate() + ql.Period(t, ql.Years),
-                               ql.QuoteHandle(ql.SimpleQuote(s)))
-                              for t, s in spreads])
+        dates, quotes = zip(
+            *[(h.referenceDate() + ql.Period(t, ql.Years), ql.QuoteHandle(ql.SimpleQuote(s))) for t, s in spreads]
+        )
         args = [h, quotes, dates]
-        constructors = [ql.SpreadedLinearZeroInterpolatedTermStructure,
-                        ql.SpreadedBackwardFlatZeroInterpolatedTermStructure,
-                        ql.SpreadedCubicZeroInterpolatedTermStructure,
-                        ql.SpreadedKrugerZeroInterpolatedTermStructure,
-                        ql.SpreadedSplineCubicZeroInterpolatedTermStructure]
+        constructors = [
+            ql.SpreadedLinearZeroInterpolatedTermStructure,
+            ql.SpreadedBackwardFlatZeroInterpolatedTermStructure,
+            ql.SpreadedCubicZeroInterpolatedTermStructure,
+            ql.SpreadedKrugerZeroInterpolatedTermStructure,
+            ql.SpreadedSplineCubicZeroInterpolatedTermStructure,
+        ]
         for constructor in constructors:
             spreadedTs = constructor(*args)
             for d, r in zip(dates, quotes):
                 expected = r.value()
 
-                zeroFromSpreadTS = spreadedTs.zeroRate(
-                    d, self.dayCounter, ql.Continuous, ql.NoFrequency).rate()
-                zeroFromBaseTs = h.zeroRate(
-                    d, self.dayCounter, ql.Continuous, ql.NoFrequency).rate()
+                zeroFromSpreadTS = spreadedTs.zeroRate(d, self.dayCounter, ql.Continuous, ql.NoFrequency).rate()
+                zeroFromBaseTs = h.zeroRate(d, self.dayCounter, ql.Continuous, ql.NoFrequency).rate()
                 actual = zeroFromSpreadTS - zeroFromBaseTs
 
                 failMsg = """ Interpolated piecewise zero spreaded term structure 
@@ -276,55 +243,21 @@ class TermStructureTest(unittest.TestCase):
                             maturity: {maturity}
                             expected zero rate: {expected}
                             actual zero rate: {actual}
-                      """.format(maturity=d,
-                                 expected=expected,
-                                 actual=actual)
-                self.assertAlmostEqual(
-                    first=expected,
-                    second=actual,
-                    delta=1.0e-12,
-                    msg=failMsg)
+                      """.format(maturity=d, expected=expected, actual=actual)
+                self.assertAlmostEqual(first=expected, second=actual, delta=1.0e-12, msg=failMsg)
 
     def testQuantoTermStructure(self):
         """Testing quanto term structure"""
         today = ql.Date.todaysDate()
 
-        dividend_ts = ql.YieldTermStructureHandle(
-            ql.FlatForward(
-                today,
-                ql.makeQuoteHandle(0.055),
-                self.dayCounter
-            )
-        )
-        r_domestic_ts = ql.YieldTermStructureHandle(
-            ql.FlatForward(
-                today,
-                ql.makeQuoteHandle(-0.01),
-                self.dayCounter
-            )
-        )
-        r_foreign_ts = ql.YieldTermStructureHandle(
-            ql.FlatForward(
-                today,
-                ql.makeQuoteHandle(0.02),
-                self.dayCounter
-            )
-        )
+        dividend_ts = ql.YieldTermStructureHandle(ql.FlatForward(today, ql.makeQuoteHandle(0.055), self.dayCounter))
+        r_domestic_ts = ql.YieldTermStructureHandle(ql.FlatForward(today, ql.makeQuoteHandle(-0.01), self.dayCounter))
+        r_foreign_ts = ql.YieldTermStructureHandle(ql.FlatForward(today, ql.makeQuoteHandle(0.02), self.dayCounter))
         sigma_s = ql.BlackVolTermStructureHandle(
-            ql.BlackConstantVol(
-                today,
-                self.calendar,
-                ql.makeQuoteHandle(0.25),
-                self.dayCounter
-            )
+            ql.BlackConstantVol(today, self.calendar, ql.makeQuoteHandle(0.25), self.dayCounter)
         )
         sigma_fx = ql.BlackVolTermStructureHandle(
-            ql.BlackConstantVol(
-                today,
-                self.calendar,
-                ql.makeQuoteHandle(0.05),
-                self.dayCounter
-            )
+            ql.BlackConstantVol(today, self.calendar, ql.makeQuoteHandle(0.05), self.dayCounter)
         )
         rho = ql.makeQuoteHandle(0.3)
         s_0 = ql.makeQuoteHandle(100.0)
@@ -342,7 +275,7 @@ class TermStructureTest(unittest.TestCase):
                 ql.nullDouble(),
                 sigma_fx,
                 ql.nullDouble(),
-                rho.value()
+                rho.value(),
             )
         )
         gbm_quanto = ql.BlackScholesMertonProcess(s_0, quanto_ts, r_domestic_ts, sigma_s)
@@ -362,17 +295,9 @@ class TermStructureTest(unittest.TestCase):
                       by using the QuantoTermStructure as the dividend together with
                       VanillaOption / AnalyticEuropeanEngine:
                       {vanilla_pv}
-                  """.format(
-            quanto_pv=quanto_option_pv,
-            vanilla_pv=vanilla_option_pv
-        )
+                  """.format(quanto_pv=quanto_option_pv, vanilla_pv=vanilla_option_pv)
 
-        self.assertAlmostEqual(
-            quanto_option_pv,
-            vanilla_option_pv,
-            delta=1e-12,
-            msg=message
-        )
+        self.assertAlmostEqual(quanto_option_pv, vanilla_option_pv, delta=1e-12, msg=message)
 
     def testLazyObject(self):
         evaluationDate = ql.Settings.instance().evaluationDate

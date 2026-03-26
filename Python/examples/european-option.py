@@ -42,7 +42,7 @@ todaysDate = ql.Date(15, ql.May, 1998)
 ql.Settings.instance().evaluationDate = todaysDate
 
 # %%
-interactive = 'get_ipython' in globals()
+interactive = "get_ipython" in globals()
 
 # %% [markdown]
 # ### Option construction
@@ -103,7 +103,7 @@ option.setPricingEngine(ql.AnalyticEuropeanEngine(process))
 value = option.NPV()
 refValue = value
 
-results.append(('Analytic', value, None, None))
+results.append(("Analytic", value, None, None))
 
 # %% [markdown]
 # #### Heston semi-analytic formula
@@ -112,7 +112,7 @@ results.append(('Analytic', value, None, None))
 option.setPricingEngine(ql.AnalyticHestonEngine(hestonModel))
 value = option.NPV()
 
-results.append(('Heston analytic', value, None, abs(value - refValue)))
+results.append(("Heston analytic", value, None, abs(value - refValue)))
 
 # %% [markdown]
 # #### Heston COS method
@@ -121,7 +121,7 @@ results.append(('Heston analytic', value, None, abs(value - refValue)))
 option.setPricingEngine(ql.COSHestonEngine(hestonModel))
 value = option.NPV()
 
-results.append(('Heston COS', value, None, abs(value - refValue)))
+results.append(("Heston COS", value, None, abs(value - refValue)))
 
 # %% [markdown]
 # #### Integral method
@@ -130,7 +130,7 @@ results.append(('Heston COS', value, None, abs(value - refValue)))
 option.setPricingEngine(ql.IntegralEngine(process))
 value = option.NPV()
 
-results.append(('Integral', value, None, abs(value - refValue)))
+results.append(("Integral", value, None, abs(value - refValue)))
 
 # %% [markdown]
 # #### Finite-difference method
@@ -143,7 +143,7 @@ gridPoints = 800
 option.setPricingEngine(ql.FdBlackScholesVanillaEngine(process, timeSteps, gridPoints))
 value = option.NPV()
 
-results.append(('Finite diff.', value, None, abs(value - refValue)))
+results.append(("Finite diff.", value, None, abs(value - refValue)))
 
 # %% [markdown]
 # #### Binomial method
@@ -156,21 +156,19 @@ for tree in ["JR", "CRR", "EQP", "Trigeorgis", "Tian", "LR", "Joshi4"]:
     option.setPricingEngine(ql.BinomialVanillaEngine(process, tree, timeSteps))
     value = option.NPV()
 
-    results.append(('Binomial (%s)' % tree, value, None, abs(value - refValue)))
+    results.append(("Binomial (%s)" % tree, value, None, abs(value - refValue)))
 
 # %% [markdown]
 # #### Monte Carlo method
 
 # %%
-option.setPricingEngine(ql.MCEuropeanEngine(process, "pseudorandom", timeSteps=1,
-                                            requiredTolerance=0.02, seed=42))
+option.setPricingEngine(ql.MCEuropeanEngine(process, "pseudorandom", timeSteps=1, requiredTolerance=0.02, seed=42))
 value = option.NPV()
 
 results.append(("Monte Carlo (pseudo-random)", value, option.errorEstimate(), abs(value - refValue)))
 
 # %%
-option.setPricingEngine(ql.MCEuropeanEngine(process, "lowdiscrepancy", timeSteps=1,
-                                            requiredSamples=32768))
+option.setPricingEngine(ql.MCEuropeanEngine(process, "lowdiscrepancy", timeSteps=1, requiredSamples=32768))
 value = option.NPV()
 
 results.append(("Monte Carlo (low-discrepancy)", value, None, abs(value - refValue)))
@@ -179,8 +177,7 @@ results.append(("Monte Carlo (low-discrepancy)", value, None, abs(value - refVal
 # ### Results
 
 # %%
-df = pd.DataFrame(results,
-                  columns=["Method", "Option value", "Error estimate", "Actual error"])
+df = pd.DataFrame(results, columns=["Method", "Option value", "Error estimate", "Actual error"])
 
 # %%
 df.style.hide(axis="index")

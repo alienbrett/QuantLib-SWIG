@@ -1,18 +1,18 @@
 """
- Copyright (C) 2019 Klaus Spanderen
+Copyright (C) 2019 Klaus Spanderen
 
- This file is part of QuantLib, a free-software/open-source library
- for financial quantitative analysts and developers - http://quantlib.org/
+This file is part of QuantLib, a free-software/open-source library
+for financial quantitative analysts and developers - http://quantlib.org/
 
- QuantLib is free software: you can redistribute it and/or modify it
- under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program; if not, please email
- <quantlib-dev@lists.sf.net>. The license is also available online at
- <https://www.quantlib.org/license.shtml>.
+QuantLib is free software: you can redistribute it and/or modify it
+under the terms of the QuantLib license.  You should have received a
+copy of the license along with this program; if not, please email
+<quantlib-dev@lists.sf.net>. The license is also available online at
+<https://www.quantlib.org/license.shtml>.
 
- This program is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the license for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.
 """
 
 import unittest
@@ -37,7 +37,7 @@ class SlvTest(unittest.TestCase):
         return ql.BlackVolTermStructureHandle(ql.BlackConstantVol(self.settlementDate, ql.TARGET(), vol, self.dc))
 
     def testSlvProcess(self):
-        """ Testing HestonSLVProcess generation """
+        """Testing HestonSLVProcess generation"""
 
         hestonProcess = ql.HestonProcess(
             self.riskFreeRate, self.riskFreeRate, self.underlying, 0.1 * 0.1, 1.0, 0.25 * 0.25, 0.15, -0.75
@@ -53,7 +53,7 @@ class SlvTest(unittest.TestCase):
         ql.HestonSLVProcess(hestonProcess, localVol)
 
     def testSlvProcessAsBlackScholes(self):
-        """ Testing HestonSLVProcess equal to Black-Scholes process """
+        """Testing HestonSLVProcess equal to Black-Scholes process"""
 
         hestonProcess = ql.HestonProcess(
             self.riskFreeRate, self.dividendYield, self.underlying, 0.01, 1.0, 0.01, 1e-4, 0.0
@@ -71,7 +71,9 @@ class SlvTest(unittest.TestCase):
 
         option.setPricingEngine(
             ql.AnalyticEuropeanEngine(
-                ql.BlackScholesMertonProcess(self.underlying, self.dividendYield, self.riskFreeRate, self.constVol(0.1))
+                ql.BlackScholesMertonProcess(
+                    self.underlying, self.dividendYield, self.riskFreeRate, self.constVol(0.1)
+                )
             )
         )
 
@@ -97,7 +99,9 @@ class SlvTest(unittest.TestCase):
 
         slvNPV = option.NPV()
 
-        bsmProcess = ql.BlackScholesMertonProcess(self.underlying, self.dividendYield, self.riskFreeRate, self.constVol(0.2))
+        bsmProcess = ql.BlackScholesMertonProcess(
+            self.underlying, self.dividendYield, self.riskFreeRate, self.constVol(0.2)
+        )
 
         option.setPricingEngine(ql.AnalyticEuropeanEngine(bsmProcess))
 
@@ -119,7 +123,8 @@ class SlvTest(unittest.TestCase):
             barrier_hi,
             0.0,
             ql.CashOrNothingPayoff(ql.Option.Call, 0.0, 1.0),
-            exercise);
+            exercise,
+        )
 
         barrierOption.setPricingEngine(
             ql.FdHestonDoubleBarrierEngine(
@@ -148,7 +153,7 @@ class SlvTest(unittest.TestCase):
         )
 
     def testFixedLocalVolSurface(self):
-        """ Testing FixedLocalVolSurface interpolation """
+        """Testing FixedLocalVolSurface interpolation"""
 
         dc = ql.Actual365Fixed()
         maturities = [ql.Date(1, 3, 2020), ql.Date(1, 6, 2020)]
@@ -156,11 +161,7 @@ class SlvTest(unittest.TestCase):
         local_vols = [[0.2, 0.3], [0.25, 0.4], [0.3, 0.4]]
 
         fixed_local_vol_surf = ql.FixedLocalVolSurface(
-            self.todaysDate,
-            [dc.yearFraction(self.todaysDate, d) for d in maturities],
-            strikes,
-            local_vols,
-            dc
+            self.todaysDate, [dc.yearFraction(self.todaysDate, d) for d in maturities], strikes, local_vols, dc
         )
 
         fixed_local_vol_surf.setInterpolation("linear")

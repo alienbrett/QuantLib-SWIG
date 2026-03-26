@@ -48,7 +48,7 @@ import math
 # %matplotlib inline
 
 # %%
-is_interactive = 'get_ipython' in globals()
+is_interactive = "get_ipython" in globals()
 
 # %%
 todaysDate = ql.Date(15, ql.May, 2019)
@@ -108,7 +108,7 @@ for i in range(0, tSteps):
         z[idx] = leverageFct.localVol(t[idx], sv[j])
 
 # %%
-fig = plt.figure(figsize=(12,8))
+fig = plt.figure(figsize=(12, 8))
 ax = plt.axes(projection="3d")
 
 surf = ax.plot_trisurf(s, t, z, cmap=plt.cm.viridis, linewidth=0, antialiased=False, edgecolor="none")

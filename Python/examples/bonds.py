@@ -38,7 +38,7 @@
 import QuantLib as ql
 import pandas as pd
 
-interactive = 'get_ipython' in globals()
+interactive = "get_ipython" in globals()
 
 # ### Global data
 
@@ -265,32 +265,24 @@ liborTermStructure.linkTo(depoSwapTermStructure)
 
 # +
 data = []
+data.append((zeroCouponBond.cleanPrice(), fixedRateBond.cleanPrice(), floatingRateBond.cleanPrice()))
+data.append((zeroCouponBond.dirtyPrice(), fixedRateBond.dirtyPrice(), floatingRateBond.dirtyPrice()))
+data.append((zeroCouponBond.accruedAmount(), fixedRateBond.accruedAmount(), floatingRateBond.accruedAmount()))
+data.append((None, fixedRateBond.previousCouponRate(), floatingRateBond.previousCouponRate()))
+data.append((None, fixedRateBond.nextCouponRate(), floatingRateBond.nextCouponRate()))
 data.append(
-    (zeroCouponBond.cleanPrice(), fixedRateBond.cleanPrice(), floatingRateBond.cleanPrice())
-)
-data.append(
-    (zeroCouponBond.dirtyPrice(), fixedRateBond.dirtyPrice(), floatingRateBond.dirtyPrice())
-)
-data.append(
-    (zeroCouponBond.accruedAmount(),
-     fixedRateBond.accruedAmount(),
-     floatingRateBond.accruedAmount())
-)
-data.append(
-    (None, fixedRateBond.previousCouponRate(), floatingRateBond.previousCouponRate())
-)
-data.append(
-    (None, fixedRateBond.nextCouponRate(), floatingRateBond.nextCouponRate())
-)
-data.append(
-    (zeroCouponBond.bondYield(ql.Actual360(), ql.Compounded, ql.Annual),
-     fixedRateBond.bondYield(ql.Actual360(), ql.Compounded, ql.Annual),
-     floatingRateBond.bondYield(ql.Actual360(), ql.Compounded, ql.Annual))
+    (
+        zeroCouponBond.bondYield(ql.Actual360(), ql.Compounded, ql.Annual),
+        fixedRateBond.bondYield(ql.Actual360(), ql.Compounded, ql.Annual),
+        floatingRateBond.bondYield(ql.Actual360(), ql.Compounded, ql.Annual),
+    )
 )
 
-df = pd.DataFrame(data, columns=["ZC", "Fixed", "Floating"],
-                  index=["Clean price", "Dirty price", "Accrued coupon",
-                         "Previous coupon rate", "Next coupon rate", "Yield"])
+df = pd.DataFrame(
+    data,
+    columns=["ZC", "Fixed", "Floating"],
+    index=["Clean price", "Dirty price", "Accrued coupon", "Previous coupon rate", "Next coupon rate", "Yield"],
+)
 if not interactive:
     print(df)
 df

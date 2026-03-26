@@ -138,8 +138,7 @@ futuresHelpers = [
 # The discount curve for the swaps will come from elsewhere. A real application would use some kind of risk-free curve; here we're using a flat one for convenience.
 
 # %%
-discountTermStructure = ql.YieldTermStructureHandle(
-    ql.FlatForward(settlementDate, 0.04, ql.Actual360()))
+discountTermStructure = ql.YieldTermStructureHandle(ql.FlatForward(settlementDate, 0.04, ql.Actual360()))
 
 # %%
 settlementDays = 2
@@ -299,8 +298,8 @@ print(swaps[(5, ql.Years)].value())
 # %%
 def show(swap):
     print("NPV         = %.2f" % swap.NPV())
-    print("Fair spread = %.4f %%" % (swap.fairSpread()*100))
-    print("Fair rate   =  %.4f %%" % (swap.fairRate()*100))
+    print("Fair spread = %.4f %%" % (swap.fairSpread() * 100))
+    print("Fair rate   =  %.4f %%" % (swap.fairRate() * 100))
 
 
 # %% [markdown]

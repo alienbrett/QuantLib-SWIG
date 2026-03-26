@@ -14,10 +14,7 @@ class ArrayTest(unittest.TestCase):
         self.assertEqual(a * 2, ql.Array([2, 4, 6]))
         self.assertEqual(3 * a, ql.Array([3, 6, 9]))
         self.assertEqual(a * b, ql.Array([4, 10, 18]))
-        self.assertEqual(
-            a * ql.Matrix([[1, 2], [3, 4], [5, 6]]),
-            ql.Array([22, 28])
-        )
+        self.assertEqual(a * ql.Matrix([[1, 2], [3, 4], [5, 6]]), ql.Array([22, 28]))
         self.assertEqual(b / 2, ql.Array([2, 2.5, 3]))
         self.assertEqual(b / a, ql.Array([4, 2.5, 2]))
         self.assertEqual(a @ b, 32)
@@ -32,4 +29,3 @@ class ArrayTest(unittest.TestCase):
 if __name__ == "__main__":
     print("testing QuantLib", ql.__version__)
     unittest.main(verbosity=2)
-

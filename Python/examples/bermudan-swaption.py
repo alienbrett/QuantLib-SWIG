@@ -129,18 +129,31 @@ dummy.setPricingEngine(swapEngine)
 atmRate = dummy.fairRate()
 
 atmSwap = ql.VanillaSwap(
-    payFixed, 1000.0, fixedSchedule, atmRate, fixedLegDayCounter,
-    floatingSchedule, index, 0.0, floatingLegDayCounter
+    payFixed, 1000.0, fixedSchedule, atmRate, fixedLegDayCounter, floatingSchedule, index, 0.0, floatingLegDayCounter
 )
 
 otmSwap = ql.VanillaSwap(
-    payFixed, 1000.0, fixedSchedule, atmRate * 1.2, fixedLegDayCounter,
-    floatingSchedule, index, 0.0, floatingLegDayCounter
+    payFixed,
+    1000.0,
+    fixedSchedule,
+    atmRate * 1.2,
+    fixedLegDayCounter,
+    floatingSchedule,
+    index,
+    0.0,
+    floatingLegDayCounter,
 )
 
 itmSwap = ql.VanillaSwap(
-    payFixed, 1000.0, fixedSchedule, atmRate * 0.8, fixedLegDayCounter,
-    floatingSchedule, index, 0.0, floatingLegDayCounter
+    payFixed,
+    1000.0,
+    fixedSchedule,
+    atmRate * 0.8,
+    fixedLegDayCounter,
+    floatingSchedule,
+    index,
+    0.0,
+    floatingLegDayCounter,
 )
 
 atmSwap.setPricingEngine(swapEngine)

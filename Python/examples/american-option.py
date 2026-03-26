@@ -115,9 +115,7 @@ results.append(("QD+", option.NPV()))
 # #### Leif Andersen, Mark Lake and Dimitri Offengenden high performance American engine
 
 # %%
-option.setPricingEngine(
-    ql.QdFpAmericanEngine(process, ql.QdFpAmericanEngine.accurateScheme())
-)
+option.setPricingEngine(ql.QdFpAmericanEngine(process, ql.QdFpAmericanEngine.accurateScheme()))
 results.append(("QD+ fixed point", option.NPV()))
 
 

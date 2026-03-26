@@ -1,26 +1,27 @@
 # coding=utf-8-unix
 """
- Copyright (C) 2017 Wojciech Ślusarski
+Copyright (C) 2017 Wojciech Ślusarski
 
- This file is part of QuantLib, a free-software/open-source library
- for financial quantitative analysts and developers - http://quantlib.org/
+This file is part of QuantLib, a free-software/open-source library
+for financial quantitative analysts and developers - http://quantlib.org/
 
- QuantLib is free software: you can redistribute it and/or modify it
- under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program; if not, please email
- <quantlib-dev@lists.sf.net>. The license is also available online at
- <https://www.quantlib.org/license.shtml>.
+QuantLib is free software: you can redistribute it and/or modify it
+under the terms of the QuantLib license.  You should have received a
+copy of the license along with this program; if not, please email
+<quantlib-dev@lists.sf.net>. The license is also available online at
+<https://www.quantlib.org/license.shtml>.
 
- This program is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the license for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.
 """
+
 import unittest
 import math
 import QuantLib as ql
 
-class BlackFormulaTest(unittest.TestCase):
 
+class BlackFormulaTest(unittest.TestCase):
     def setUp(self):
         # define the market and option parameters
         self.option_type = ql.Option.Call
@@ -35,43 +36,33 @@ class BlackFormulaTest(unittest.TestCase):
 
     def test_blackFormula(self):
         """Testing blackFormula in a simple Black-Scholes World..."""
-        #Anyone interested, feel free to provide more accurate number
+        # Anyone interested, feel free to provide more accurate number
         expected = 10.4506
-        res = ql.blackFormula(self.option_type,
-                                 self.strike,
-                                 self.forward,
-                                 self.vol,
-                                 self.df,
-                                 self.displacement)
-        self.assertAlmostEqual(expected, res, delta=1e-4,
-                               msg="Failed to calculate simple  "
-                                   "Black-Scholes-Merton price rounded to "
-                                   "four decimal places.")
+        res = ql.blackFormula(self.option_type, self.strike, self.forward, self.vol, self.df, self.displacement)
+        self.assertAlmostEqual(
+            expected,
+            res,
+            delta=1e-4,
+            msg="Failed to calculate simple  Black-Scholes-Merton price rounded to four decimal places.",
+        )
 
     def test_black_formula_implied_stdev(self):
         """Testing implied volatility calculator"""
         expected = 0.2 * math.sqrt(self.expiry)
         black_price = 10.4506
-        res = ql.blackFormulaImpliedStdDev(self.option_type,
-                                              self.strike,
-                                              self.forward,
-                                              black_price,
-                                              self.df)
-        self.assertAlmostEqual(expected, res, delta=1e-4,
-                               msg="Failed to determine Implied Vol rounded "
-                                   "to a single vol bps.")
+        res = ql.blackFormulaImpliedStdDev(self.option_type, self.strike, self.forward, black_price, self.df)
+        self.assertAlmostEqual(
+            expected, res, delta=1e-4, msg="Failed to determine Implied Vol rounded to a single vol bps."
+        )
 
 
 class BlackDeltaCalculatorTest(unittest.TestCase):
-
     def setUp(self):
         self.todaysDate = ql.Date(5, ql.September, 2017)
         ql.Settings.instance().evaluationDate = self.todaysDate
         self.spotDate = ql.Date(7, ql.September, 2017)
-        self.domestic_rate = ql.FlatForward(self.spotDate, 0.017,
-                                            ql.Actual365Fixed())
-        self.foreign_rate = ql.FlatForward(self.spotDate, 0.013,
-                                           ql.Actual365Fixed())
+        self.domestic_rate = ql.FlatForward(self.spotDate, 0.017, ql.Actual365Fixed())
+        self.foreign_rate = ql.FlatForward(self.spotDate, 0.013, ql.Actual365Fixed())
 
     def tearDown(self):
         ql.Settings.instance().evaluationDate = ql.Date()
@@ -86,26 +77,19 @@ class BlackDeltaCalculatorTest(unittest.TestCase):
         forward = spot_price * forDf / domDf
 
         spot_delta_level = 0.75
-        stDev = volatility * expiry ** 0.5
+        stDev = volatility * expiry**0.5
 
         inv_norm_dist = ql.InverseCumulativeNormal()
         expected_strike = inv_norm_dist(spot_delta_level / forDf)
         expected_strike *= stDev
-        expected_strike -= 0.5 * stDev ** 2
+        expected_strike -= 0.5 * stDev**2
         expected_strike = math.exp(expected_strike) / forward
         expected_strike = 1 / expected_strike
 
         option_type = ql.Option.Call
         delta_type = ql.DeltaVolQuote.Spot
 
-        black_calculator = ql.BlackDeltaCalculator(option_type,
-                                                   delta_type,
-                                                   spot_price,
-                                                   domDf,
-                                                   forDf,
-                                                   stDev)
-
-
+        black_calculator = ql.BlackDeltaCalculator(option_type, delta_type, spot_price, domDf, forDf, stDev)
 
         strike = black_calculator.strikeFromDelta(spot_delta_level)
 
@@ -119,24 +103,19 @@ class BlackDeltaCalculatorTest(unittest.TestCase):
         domDf = self.domestic_rate.discount(expiry)
         forDf = self.foreign_rate.discount(expiry)
         forward = spot_price * forDf / domDf
-        expected_strike = forward * math.exp(-0.5 * volatility ** 2 * expiry)
+        expected_strike = forward * math.exp(-0.5 * volatility**2 * expiry)
 
         option_type = ql.Option.Call
         delta_type = ql.DeltaVolQuote.AtmDeltaNeutral
-        stDev = volatility * expiry ** 0.5
+        stDev = volatility * expiry**0.5
 
-        black_calculator = ql.BlackDeltaCalculator(option_type,
-                                                   delta_type,
-                                                   spot_price,
-                                                   domDf,
-                                                   forDf,
-                                                   stDev)
+        black_calculator = ql.BlackDeltaCalculator(option_type, delta_type, spot_price, domDf, forDf, stDev)
 
         strike = black_calculator.atmStrike(ql.DeltaVolQuote.AtmDeltaNeutral)
 
         self.assertAlmostEqual(expected_strike, strike, delta=1e-4)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("testing QuantLib", ql.__version__)
     unittest.main(verbosity=2)

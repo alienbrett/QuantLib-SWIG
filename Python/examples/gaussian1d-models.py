@@ -121,49 +121,66 @@ euribor6m = ql.Euribor6M(hyts6m)
 swaptionVol = ql.ConstantSwaptionVolatility(0, ql.TARGET(), ql.ModifiedFollowing, volQuote, ql.Actual365Fixed())
 
 # %%
-effectiveDate = ql.TARGET().advance(refDate, ql.Period('2D'))
-maturityDate = ql.TARGET().advance(effectiveDate, ql.Period('10Y'))
+effectiveDate = ql.TARGET().advance(refDate, ql.Period("2D"))
+maturityDate = ql.TARGET().advance(effectiveDate, ql.Period("10Y"))
 
 # %%
-fixedSchedule = ql.Schedule(effectiveDate,
-                            maturityDate,
-                            ql.Period('1Y'),
-                            ql.TARGET(),
-                            ql.ModifiedFollowing,
-                            ql.ModifiedFollowing,
-                            ql.DateGeneration.Forward, False)
+fixedSchedule = ql.Schedule(
+    effectiveDate,
+    maturityDate,
+    ql.Period("1Y"),
+    ql.TARGET(),
+    ql.ModifiedFollowing,
+    ql.ModifiedFollowing,
+    ql.DateGeneration.Forward,
+    False,
+)
 
 # %%
-floatSchedule = ql.Schedule(effectiveDate,
-                            maturityDate,
-                            ql.Period('6M'),
-                            ql.TARGET(),
-                            ql.ModifiedFollowing,
-                            ql.ModifiedFollowing,
-                            ql.DateGeneration.Forward, False)
+floatSchedule = ql.Schedule(
+    effectiveDate,
+    maturityDate,
+    ql.Period("6M"),
+    ql.TARGET(),
+    ql.ModifiedFollowing,
+    ql.ModifiedFollowing,
+    ql.DateGeneration.Forward,
+    False,
+)
 
 # %% [markdown]
 # We consider a standard 10-years Bermudan payer swaption with yearly exercises at a strike of 4%.
 
 # %%
-fixedNominal    = [1]*(len(fixedSchedule)-1)
-floatingNominal = [1]*(len(floatSchedule)-1)
-strike          = [0.04]*(len(fixedSchedule)-1)
-gearing         = [1]*(len(floatSchedule)-1)
-spread          = [0]*(len(floatSchedule)-1)
+fixedNominal = [1] * (len(fixedSchedule) - 1)
+floatingNominal = [1] * (len(floatSchedule) - 1)
+strike = [0.04] * (len(fixedSchedule) - 1)
+gearing = [1] * (len(floatSchedule) - 1)
+spread = [0] * (len(floatSchedule) - 1)
 
 # %%
 underlying = ql.NonstandardSwap(
     ql.Swap.Payer,
-    fixedNominal, floatingNominal, fixedSchedule, strike,
-    ql.Thirty360(ql.Thirty360.BondBasis), floatSchedule,
-    euribor6m, gearing, spread, ql.Actual360(), False, False, ql.ModifiedFollowing)
+    fixedNominal,
+    floatingNominal,
+    fixedSchedule,
+    strike,
+    ql.Thirty360(ql.Thirty360.BondBasis),
+    floatSchedule,
+    euribor6m,
+    gearing,
+    spread,
+    ql.Actual360(),
+    False,
+    False,
+    ql.ModifiedFollowing,
+)
 
 # %%
-exerciseDates = [ql.TARGET().advance(x, -ql.Period('2D')) for x in fixedSchedule]
+exerciseDates = [ql.TARGET().advance(x, -ql.Period("2D")) for x in fixedSchedule]
 exerciseDates = exerciseDates[1:-1]
 exercise = ql.BermudanExercise(exerciseDates)
-swaption = ql.NonstandardSwaption(underlying,exercise,ql.Settlement.Physical)
+swaption = ql.NonstandardSwaption(underlying, exercise, ql.Settlement.Physical)
 
 # %% [markdown]
 # The model is a one factor Hull White model with piecewise volatility adapted to our exercise dates.
@@ -182,14 +199,15 @@ reversion = [ql.makeQuoteHandle(0.01)]
 gsr = ql.Gsr(t0_curve, stepDates, sigmas, reversion)
 swaptionEngine = ql.Gaussian1dSwaptionEngine(gsr, 64, 7.0, True, False, t0_Ois)
 nonstandardSwaptionEngine = ql.Gaussian1dNonstandardSwaptionEngine(
-    gsr, 64, 7.0, True, False, ql.makeQuoteHandle(0.0), t0_Ois)
+    gsr, 64, 7.0, True, False, ql.makeQuoteHandle(0.0), t0_Ois
+)
 
 # %%
 swaption.setPricingEngine(nonstandardSwaptionEngine)
 
 # %%
-swapBase = ql.EuriborSwapIsdaFixA(ql.Period('10Y'), t0_curve, t0_Ois)
-basket = swaption.calibrationBasket(swapBase, swaptionVol, 'Naive')
+swapBase = ql.EuriborSwapIsdaFixA(ql.Period("10Y"), t0_curve, t0_Ois)
+basket = swaption.calibrationBasket(swapBase, swaptionVol, "Naive")
 
 # %%
 for basket_i in basket:
@@ -229,7 +247,7 @@ print(swaption.NPV())
 # Let's try this in our case.
 
 # %%
-basket = swaption.calibrationBasket(swapBase, swaptionVol, 'MaturityStrikeByDeltaGamma')
+basket = swaption.calibrationBasket(swapBase, swaptionVol, "MaturityStrikeByDeltaGamma")
 show(basket_data(basket))
 
 # %%
@@ -255,24 +273,36 @@ print(swaption.NPV())
 # We can do more complicated things.  Let's e.g. modify the nominal schedule to be linear amortizing and see what the effect on the generated calibration basket is:
 
 # %%
-for i in range(0,len(fixedSchedule)-1):
-    tmp = 1 - i/ (len(fixedSchedule)-1)
-    fixedNominal[i]        = tmp
-    floatingNominal[i*2]   = tmp
-    floatingNominal[i*2+1] = tmp
+for i in range(0, len(fixedSchedule) - 1):
+    tmp = 1 - i / (len(fixedSchedule) - 1)
+    fixedNominal[i] = tmp
+    floatingNominal[i * 2] = tmp
+    floatingNominal[i * 2 + 1] = tmp
 
 # %%
-underlying2 = ql.NonstandardSwap(ql.Swap.Payer,
-                            fixedNominal, floatingNominal, fixedSchedule, strike,
-                            ql.Thirty360(ql.Thirty360.BondBasis), floatSchedule,
-                            euribor6m, gearing, spread, ql.Actual360(), False, False, ql.ModifiedFollowing)
+underlying2 = ql.NonstandardSwap(
+    ql.Swap.Payer,
+    fixedNominal,
+    floatingNominal,
+    fixedSchedule,
+    strike,
+    ql.Thirty360(ql.Thirty360.BondBasis),
+    floatSchedule,
+    euribor6m,
+    gearing,
+    spread,
+    ql.Actual360(),
+    False,
+    False,
+    ql.ModifiedFollowing,
+)
 
 # %%
-swaption2 = ql.NonstandardSwaption(underlying2,exercise,ql.Settlement.Physical)
+swaption2 = ql.NonstandardSwaption(underlying2, exercise, ql.Settlement.Physical)
 
 # %%
 swaption2.setPricingEngine(nonstandardSwaptionEngine)
-basket = swaption2.calibrationBasket(swapBase, swaptionVol, 'MaturityStrikeByDeltaGamma')
+basket = swaption2.calibrationBasket(swapBase, swaptionVol, "MaturityStrikeByDeltaGamma")
 
 # %%
 show(basket_data(basket))
@@ -284,19 +314,31 @@ show(basket_data(basket))
 # You can also price exotic bond's features. If you have e.g. a Bermudan callable fixed bond you can set up the call right as a swaption to enter into a one leg swap with notional reimbursement at maturity. The exercise should then be written as a rebated exercise paying the notional in case of exercise. The calibration basket looks like this:
 
 # %%
-fixedNominal2    = [1]*(len(fixedSchedule)-1)
-floatingNominal2 = [0]*(len(floatSchedule)-1) #null the second leg
+fixedNominal2 = [1] * (len(fixedSchedule) - 1)
+floatingNominal2 = [0] * (len(floatSchedule) - 1)  # null the second leg
 
 # %%
-underlying3 = ql.NonstandardSwap(ql.Swap.Receiver,
-                            fixedNominal2, floatingNominal2, fixedSchedule, strike,
-                            ql.Thirty360(ql.Thirty360.BondBasis), floatSchedule,
-                            euribor6m, gearing, spread, ql.Actual360(), False, True, ql.ModifiedFollowing)
+underlying3 = ql.NonstandardSwap(
+    ql.Swap.Receiver,
+    fixedNominal2,
+    floatingNominal2,
+    fixedSchedule,
+    strike,
+    ql.Thirty360(ql.Thirty360.BondBasis),
+    floatSchedule,
+    euribor6m,
+    gearing,
+    spread,
+    ql.Actual360(),
+    False,
+    True,
+    ql.ModifiedFollowing,
+)
 
 # %%
-rebateAmount = [-1]*len(exerciseDates)
+rebateAmount = [-1] * len(exerciseDates)
 exercise2 = ql.RebatedExercise(exercise, rebateAmount, 2, ql.TARGET())
-swaption3 = ql.NonstandardSwaption(underlying3,exercise2,ql.Settlement.Physical)
+swaption3 = ql.NonstandardSwaption(underlying3, exercise2, ql.Settlement.Physical)
 
 # %%
 oas0 = ql.SimpleQuote(0)
@@ -305,11 +347,12 @@ oas = ql.RelinkableQuoteHandle(oas0)
 
 # %%
 nonstandardSwaptionEngine2 = ql.Gaussian1dNonstandardSwaptionEngine(
-    gsr, 64, 7.0, True, False, oas, t0_curve) # Change discounting to 6m
+    gsr, 64, 7.0, True, False, oas, t0_curve
+)  # Change discounting to 6m
 
 # %%
 swaption3.setPricingEngine(nonstandardSwaptionEngine2)
-basket = swaption3.calibrationBasket(swapBase, swaptionVol, 'MaturityStrikeByDeltaGamma')
+basket = swaption3.calibrationBasket(swapBase, swaptionVol, "MaturityStrikeByDeltaGamma")
 
 # %%
 show(basket_data(basket))
@@ -334,7 +377,7 @@ print(swaption3.NPV())
 
 # %%
 oas.linkTo(oas100)
-basket = swaption3.calibrationBasket(swapBase, swaptionVol, 'MaturityStrikeByDeltaGamma')
+basket = swaption3.calibrationBasket(swapBase, swaptionVol, "MaturityStrikeByDeltaGamma")
 show(basket_data(basket))
 
 # %% [markdown]
@@ -354,23 +397,37 @@ print(swaption3.NPV())
 # The next instrument we look at is a CMS 10Y vs Euribor 6M swaption. The maturity is again 10 years and the option is exercisable on a yearly basis.
 
 # %%
-CMSNominal     = [1]*(len(fixedSchedule)-1)
-CMSgearing     = [1]*(len(fixedSchedule)-1)
-CMSspread      = [0]*(len(fixedSchedule)-1)
-EuriborNominal = [1]*(len(floatSchedule)-1)
-Euriborgearing = [1]*(len(floatSchedule)-1)
-Euriborspread  = [0.001]*(len(floatSchedule)-1)
-underlying4 = ql.FloatFloatSwap(ql.Swap.Payer,
-                                CMSNominal, EuriborNominal,
-                                fixedSchedule, swapBase, ql.Thirty360(ql.Thirty360.BondBasis),
-                                floatSchedule, euribor6m, ql.Actual360(),
-                                False, False, CMSgearing, CMSspread, [], [],
-                                Euriborgearing, Euriborspread)
+CMSNominal = [1] * (len(fixedSchedule) - 1)
+CMSgearing = [1] * (len(fixedSchedule) - 1)
+CMSspread = [0] * (len(fixedSchedule) - 1)
+EuriborNominal = [1] * (len(floatSchedule) - 1)
+Euriborgearing = [1] * (len(floatSchedule) - 1)
+Euriborspread = [0.001] * (len(floatSchedule) - 1)
+underlying4 = ql.FloatFloatSwap(
+    ql.Swap.Payer,
+    CMSNominal,
+    EuriborNominal,
+    fixedSchedule,
+    swapBase,
+    ql.Thirty360(ql.Thirty360.BondBasis),
+    floatSchedule,
+    euribor6m,
+    ql.Actual360(),
+    False,
+    False,
+    CMSgearing,
+    CMSspread,
+    [],
+    [],
+    Euriborgearing,
+    Euriborspread,
+)
 
 # %%
 swaption4 = ql.FloatFloatSwaption(underlying4, exercise)
 floatSwaptionEngine = ql.Gaussian1dFloatFloatSwaptionEngine(
-    gsr, 64, 7.0, True, False, ql.makeQuoteHandle(0.0), t0_Ois, True)
+    gsr, 64, 7.0, True, False, ql.makeQuoteHandle(0.0), t0_Ois, True
+)
 swaption4.setPricingEngine(floatSwaptionEngine)
 
 # %% [markdown]
@@ -401,7 +458,7 @@ print("Underlying Euribor  NPV = %f" % underlying4.legNPV(1))
 # We generate a naive calibration basket and calibrate the GSR model to it:
 
 # %%
-basket = swaption4.calibrationBasket(swapBase, swaptionVol, 'Naive')
+basket = swaption4.calibrationBasket(swapBase, swaptionVol, "Naive")
 
 # %%
 for basket_i in basket:
@@ -434,18 +491,26 @@ print(swaption4.underlyingValue())
 # %%
 markovStepDates = exerciseDates
 cmsFixingDates = markovStepDates
-markovSimgas = [0.01]* (len(markovStepDates)+1)
-tenors = [ql.Period('10Y')]*len(cmsFixingDates)
-markov = ql.MarkovFunctional(t0_curve, reversionQuote.value(), markovStepDates, markovSimgas, swaptionVolHandle,
-                             cmsFixingDates, tenors, swapBase)
+markovSimgas = [0.01] * (len(markovStepDates) + 1)
+tenors = [ql.Period("10Y")] * len(cmsFixingDates)
+markov = ql.MarkovFunctional(
+    t0_curve,
+    reversionQuote.value(),
+    markovStepDates,
+    markovSimgas,
+    swaptionVolHandle,
+    cmsFixingDates,
+    tenors,
+    swapBase,
+)
 
 # %%
-swaptionEngineMarkov = ql.Gaussian1dSwaptionEngine(markov, 8, 5.0, True,
-                                                   False, t0_Ois)
+swaptionEngineMarkov = ql.Gaussian1dSwaptionEngine(markov, 8, 5.0, True, False, t0_Ois)
 
 # %%
 floatEngineMarkov = ql.Gaussian1dFloatFloatSwaptionEngine(
-    markov, 16, 7.0, True, False, ql.makeQuoteHandle(0.0), t0_Ois, True)
+    markov, 16, 7.0, True, False, ql.makeQuoteHandle(0.0), t0_Ois, True
+)
 
 # %% [markdown]
 # The option npv is the markov model is:
