@@ -572,6 +572,22 @@ class EssviVolatilityTermStructure : public BlackVolTermStructure {
             = EssviButterflyCondition::GatheralJacquier,
         const DayCounter& dc = Actual365Fixed());
 
+    // Global arb-free parameters with discrete dividends
+    EssviVolatilityTermStructure(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<Real>& rhos,
+        Real theta1,
+        const std::vector<Real>& as,
+        const std::vector<Real>& cs,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        DividendSchedule dividends,
+        EssviButterflyCondition::Type bflyType
+            = EssviButterflyCondition::GatheralJacquier,
+        const DayCounter& dc = Actual365Fixed());
+
     Size numSlices() const;
     const std::vector<EssviSliceParams>& slices() const;
 

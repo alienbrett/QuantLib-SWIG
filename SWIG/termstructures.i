@@ -99,6 +99,21 @@ class ImpliedTermStructure : public YieldTermStructure {
                          const Date& referenceDate);
 };
 
+// jumped term structure (multiplicative DF adjustments for proportional dividends)
+
+%{
+#include <ql/termstructures/yield/jumpedyieldtermstructure.hpp>
+using QuantLib::JumpedYieldTermStructure;
+%}
+
+%shared_ptr(JumpedYieldTermStructure);
+class JumpedYieldTermStructure : public YieldTermStructure {
+  public:
+    JumpedYieldTermStructure(const Handle<YieldTermStructure>& baseHandle,
+                             const std::vector<Time>& jumpTimes,
+                             const std::vector<DiscountFactor>& jumpFactors);
+};
+
 // spreaded term structures
 
 %{
