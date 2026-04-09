@@ -615,6 +615,20 @@ class BinomialVanillaEngine : public PricingEngine {
 #endif
 
 %{
+#include <ql/pricingengines/vanilla/vnbinomialengine.hpp>
+using QuantLib::VNBinomialVanillaEngine;
+%}
+
+%shared_ptr(VNBinomialVanillaEngine)
+class VNBinomialVanillaEngine : public PricingEngine {
+  public:
+    VNBinomialVanillaEngine(
+        const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+        DividendSchedule dividends,
+        Size timeSteps);
+};
+
+%{
 using QuantLib::MCEuropeanEngine;
 using QuantLib::MCEuropeanHestonEngine;
 using QuantLib::MCAmericanEngine;
