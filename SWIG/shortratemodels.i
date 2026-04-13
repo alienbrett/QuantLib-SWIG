@@ -207,6 +207,50 @@ class G2SwaptionEngine : public PricingEngine {
 };
 
 
+// ── G2 Copula Bond Option Engine ─────────────────────────────────
+
+%{
+#include <ql/pricingengines/bond/g2copulabondoptionengine.hpp>
+using QuantLib::SabrTenorParams;
+using QuantLib::CashflowEntry;
+using QuantLib::g2CopulaBondOptionPV;
+%}
+
+struct SabrTenorParams {
+    Real forward;
+    Real atmNormalVol;
+    Real alpha;
+    Real beta;
+    Real nu;
+    Real rho;
+    Real shift;
+    bool hasSabr() const;
+    SabrTenorParams();
+};
+
+struct CashflowEntry {
+    Real amount;
+    Real timeFromExpiry;
+    CashflowEntry();
+};
+
+namespace std {
+    %template(SabrTenorParamsVector) vector<SabrTenorParams>;
+    %template(CashflowEntryVector) vector<CashflowEntry>;
+}
+
+Real g2CopulaBondOptionPV(
+    const ext::shared_ptr<G2>& model,
+    const std::vector<CashflowEntry>& cashflows,
+    const std::vector<Real>& tenors,
+    const std::vector<SabrTenorParams>& sabrParams,
+    Real strike,
+    Time expiryTime,
+    Option::Type type,
+    Size quadOrder = 16,
+    Size nCdfStrikes = 200,
+    Real nCdfStd = 4.0);
+
 %shared_ptr(FdG2SwaptionEngine)
 class FdG2SwaptionEngine : public PricingEngine {
   public:
