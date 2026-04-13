@@ -478,7 +478,8 @@ class MyNewVolSurface : public BlackVolTermStructure {
 %}
 
 %typemap(out) std::vector<Real> batchBlackVol,
-              std::vector<Real> batchImpliedVolGlobalGradient {
+              std::vector<Real> batchImpliedVolGlobalGradient,
+              std::vector<Real> chainJacobian {
     npy_intp dims[1] = { static_cast<npy_intp>($1.size()) };
     $result = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
     if ($result && $1.size() > 0) {
@@ -612,6 +613,12 @@ class EssviVolatilityTermStructure : public BlackVolTermStructure {
         const EssviGlobalParams& gp,
         EssviButterflyCondition::Type bflyCond
             = EssviButterflyCondition::GatheralJacquier) const;
+
+    // Chain Jacobian: d(theta,psi)/d(global_params) via Mingone forward-mode AD
+    std::vector<Real> chainJacobian(
+        const EssviGlobalParams& gp,
+        EssviButterflyCondition::Type bflyCond
+            = EssviButterflyCondition::GatheralJacquier) const;
 };
 
 %shared_ptr(EssviLocalVolSurface);
@@ -711,6 +718,11 @@ class DualWingEssviVolatilityTermStructure : public BlackVolTermStructure {
     std::vector<Real> batchImpliedVolGlobalGradient(
         const std::vector<Size>& sliceIndices,
         const std::vector<Real>& strikes,
+        const DualWingEssviGlobalParams& gp,
+        EssviButterflyCondition::Type bflyCond
+            = EssviButterflyCondition::GatheralJacquier) const;
+
+    std::vector<Real> chainJacobian(
         const DualWingEssviGlobalParams& gp,
         EssviButterflyCondition::Type bflyCond
             = EssviButterflyCondition::GatheralJacquier) const;
