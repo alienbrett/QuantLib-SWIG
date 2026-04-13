@@ -629,6 +629,20 @@ class VNBinomialVanillaEngine : public PricingEngine {
 };
 
 %{
+#include <ql/pricingengines/vanilla/vntrinomiallocalvolengine.hpp>
+using QuantLib::VNTrinomialLocalVolEngine;
+%}
+
+%shared_ptr(VNTrinomialLocalVolEngine)
+class VNTrinomialLocalVolEngine : public PricingEngine {
+  public:
+    VNTrinomialLocalVolEngine(
+        const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+        DividendSchedule dividends,
+        Size timeSteps);
+};
+
+%{
 using QuantLib::MCEuropeanEngine;
 using QuantLib::MCEuropeanHestonEngine;
 using QuantLib::MCAmericanEngine;
