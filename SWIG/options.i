@@ -640,6 +640,11 @@ class VNTrinomialLocalVolEngine : public PricingEngine {
         const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
         DividendSchedule dividends,
         Size timeSteps);
+    VNTrinomialLocalVolEngine(
+        const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+        DividendSchedule dividends,
+        Size timeSteps,
+        const ext::shared_ptr<LocalVolTermStructure>& localVol);
 };
 
 %{
