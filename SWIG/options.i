@@ -639,18 +639,21 @@ class VNTrinomialLocalVolEngine : public PricingEngine {
     VNTrinomialLocalVolEngine(
         const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
         DividendSchedule dividends,
-        Size timeSteps);
-    VNTrinomialLocalVolEngine(
-        const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-        DividendSchedule dividends,
         Size timeSteps,
-        const ext::shared_ptr<LocalVolTermStructure>& localVol);
+        std::vector<Time> breakTimes = {});
     VNTrinomialLocalVolEngine(
         const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
         DividendSchedule dividends,
         Size timeSteps,
         const ext::shared_ptr<LocalVolTermStructure>& localVol,
-        Size lvGridStride);
+        std::vector<Time> breakTimes = {});
+    VNTrinomialLocalVolEngine(
+        const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+        DividendSchedule dividends,
+        Size timeSteps,
+        const ext::shared_ptr<LocalVolTermStructure>& localVol,
+        Size lvGridStride,
+        std::vector<Time> breakTimes = {});
 };
 
 %{
