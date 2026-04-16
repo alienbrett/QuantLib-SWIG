@@ -619,6 +619,15 @@ class EssviVolatilityTermStructure : public BlackVolTermStructure {
         const EssviGlobalParams& gp,
         EssviButterflyCondition::Type bflyCond
             = EssviButterflyCondition::GatheralJacquier) const;
+
+    // Update global params in-place (reuses handles, dates, observers)
+    void setGlobalParams(
+        const std::vector<Real>& rhos,
+        Real theta1,
+        const std::vector<Real>& as,
+        const std::vector<Real>& cs,
+        EssviButterflyCondition::Type bflyType
+            = EssviButterflyCondition::GatheralJacquier);
 };
 
 %shared_ptr(EssviLocalVolSurface);
