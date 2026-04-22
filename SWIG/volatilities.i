@@ -478,7 +478,9 @@ class MyNewVolSurface : public BlackVolTermStructure {
 %}
 
 %typemap(out) std::vector<Real> batchBlackVol,
+              std::vector<Real> batchBlackVolAtTimes,
               std::vector<Real> batchImpliedVolGlobalGradient,
+              std::vector<Real> batchImpliedVolGlobalGradientAtTimes,
               std::vector<Real> chainJacobian {
     npy_intp dims[1] = { static_cast<npy_intp>($1.size()) };
     $result = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
@@ -614,6 +616,18 @@ class EssviVolatilityTermStructure : public BlackVolTermStructure {
         EssviButterflyCondition::Type bflyCond
             = EssviButterflyCondition::GatheralJacquier) const;
 
+    // Batch at arbitrary times (no bucketing to pillar slices)
+    std::vector<Real> batchBlackVolAtTimes(
+        const std::vector<Real>& times,
+        const std::vector<Real>& strikes) const;
+
+    std::vector<Real> batchImpliedVolGlobalGradientAtTimes(
+        const std::vector<Real>& times,
+        const std::vector<Real>& strikes,
+        const EssviGlobalParams& gp,
+        EssviButterflyCondition::Type bflyCond
+            = EssviButterflyCondition::GatheralJacquier) const;
+
     // Chain Jacobian: d(theta,psi)/d(global_params) via Mingone forward-mode AD
     std::vector<Real> chainJacobian(
         const EssviGlobalParams& gp,
@@ -639,6 +653,102 @@ class EssviLocalVolSurface : public LocalVolTermStructure {
         const Handle<YieldTermStructure>& dividendYield,
         const Handle<Quote>& spot);
 };
+
+// PWL PDF black vol surface (forward-aware, log-moneyness interpolation)
+
+%{
+#include <ql/termstructures/volatility/equityfx/pwlpdfblackvolsurface.hpp>
+using QuantLib::PwlPdfBlackVolSurface;
+%}
+
+%shared_ptr(PwlPdfBlackVolSurface);
+class PwlPdfBlackVolSurface : public BlackVolTermStructure {
+  public:
+    // Continuous dividend yield only
+    PwlPdfBlackVolSurface(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<std::vector<Real>>& kGrids,
+        const std::vector<std::vector<Real>>& impliedVols,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        const DayCounter& dc = Actual365Fixed(),
+        const std::vector<Real>& calibrationForwards
+            = std::vector<Real>());
+
+    // With discrete dividends (matches eSSVI signature)
+    PwlPdfBlackVolSurface(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<std::vector<Real>>& kGrids,
+        const std::vector<std::vector<Real>>& impliedVols,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        DividendSchedule dividends,
+        const DayCounter& dc = Actual365Fixed(),
+        const std::vector<Real>& calibrationForwards
+            = std::vector<Real>());
+};
+
+// PWL PDF vol surface (takes raw PDF params, computes black vol analytically)
+
+%{
+#include <ql/termstructures/volatility/equityfx/pwlpdfsurface.hpp>
+using QuantLib::PwlPdfVolSurface;
+%}
+
+%shared_ptr(PwlPdfVolSurface);
+class PwlPdfVolSurface : public BlackVolTermStructure {
+  public:
+    // Continuous dividend yield only
+    PwlPdfVolSurface(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<std::vector<Real>>& xGrids,
+        const std::vector<std::vector<Real>>& qValues,
+        const std::vector<Real>& calibrationForwards,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        const DayCounter& dc = Actual365Fixed());
+
+    // With discrete dividends
+    PwlPdfVolSurface(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<std::vector<Real>>& xGrids,
+        const std::vector<std::vector<Real>>& qValues,
+        const std::vector<Real>& calibrationForwards,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        DividendSchedule dividends,
+        const DayCounter& dc = Actual365Fixed());
+
+    // Inspectors
+    Real callForward(Real x, Time t) const;
+    Real pdfValue(Real x, Time t) const;
+};
+
+// PWL PDF local vol surface (analytical Dupire from PDF)
+
+%{
+#include <ql/termstructures/volatility/equityfx/pwlpdflocalvolsurface.hpp>
+using QuantLib::PwlPdfLocalVolSurface;
+%}
+
+%shared_ptr(PwlPdfLocalVolSurface);
+class PwlPdfLocalVolSurface : public LocalVolTermStructure {
+  public:
+    PwlPdfLocalVolSurface(
+        const ext::shared_ptr<PwlPdfVolSurface>& pdfSurface,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        const Handle<Quote>& spot);
+};
+
 
 // Dual-wing eSSVI volatility term structure
 
