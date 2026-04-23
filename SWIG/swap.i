@@ -316,9 +316,56 @@ class DiscountingSwapEngine : public PricingEngine {
 
 
 %{
+using QuantLib::RangeAccrualSwap;
 using QuantLib::AssetSwap;
 using QuantLib::OvernightIndexedSwapIndex;
 %}
+
+%shared_ptr(RangeAccrualSwap)
+class RangeAccrualSwap : public Swap {
+  public:
+    RangeAccrualSwap(
+        Swap::Type type,
+        // fixed (funding) leg
+        std::vector<Real> fixedNominal,
+        Schedule fixedSchedule,
+        std::vector<Real> fixedRate,
+        DayCounter fixedDayCount,
+        // range accrual leg
+        std::vector<Real> raNominal,
+        Schedule raSchedule,
+        ext::shared_ptr<SwapIndex> observationIndex,
+        Period observationTenor,
+        std::vector<Real> raGearings,
+        std::vector<Spread> raSpreads,
+        std::vector<Rate> lowerTriggers,
+        std::vector<Rate> upperTriggers,
+        DayCounter raDayCount,
+        BusinessDayConvention paymentConvention = Following,
+        BusinessDayConvention observationConvention = ModifiedFollowing);
+
+    Swap::Type type() const;
+    const std::vector<Real>& fixedNominal() const;
+    const Schedule& fixedSchedule() const;
+    const std::vector<Real>& fixedRate() const;
+    const DayCounter& fixedDayCount() const;
+
+    const std::vector<Real>& raNominal() const;
+    const Schedule& raSchedule() const;
+    const ext::shared_ptr<SwapIndex>& observationIndex() const;
+    const Period& observationTenor() const;
+    const std::vector<Real>& raGearings() const;
+    const std::vector<Spread>& raSpreads() const;
+    const std::vector<Rate>& lowerTriggers() const;
+    const std::vector<Rate>& upperTriggers() const;
+    const DayCounter& raDayCount() const;
+    BusinessDayConvention paymentConvention() const;
+    BusinessDayConvention observationConvention() const;
+
+    const Leg& fixedLeg() const;
+    const Leg& raLeg() const;
+    const std::vector<Date>& observationDates(Size i) const;
+};
 
 %shared_ptr(AssetSwap)
 class AssetSwap : public Swap {

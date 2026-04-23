@@ -215,6 +215,7 @@ using QuantLib::Gaussian1dSwaptionEngine;
 using QuantLib::Gaussian1dJamshidianSwaptionEngine;
 using QuantLib::Gaussian1dNonstandardSwaptionEngine;
 using QuantLib::Gaussian1dFloatFloatSwaptionEngine;
+using QuantLib::Gaussian1dCallableRangeAccrualEngine;
 %}
 
 %shared_ptr(Gaussian1dCapFloorEngine)
@@ -292,6 +293,21 @@ class Gaussian1dFloatFloatSwaptionEngine : public PricingEngine {
                 const bool includeTodaysExercise = false,
                 const Gaussian1dFloatFloatSwaptionEngine::Probabilities probabilities =
                                     Gaussian1dFloatFloatSwaptionEngine::None);
+};
+
+%shared_ptr(Gaussian1dCallableRangeAccrualEngine)
+class Gaussian1dCallableRangeAccrualEngine : public PricingEngine {
+  public:
+    Gaussian1dCallableRangeAccrualEngine(
+            const ext::shared_ptr<Gaussian1dModel>& model,
+            int integrationPoints = 64,
+            Real stddevs = 7.0,
+            bool extrapolatePayoff = true,
+            bool flatPayoffExtrapolation = false,
+            const Handle<YieldTermStructure>& discountCurve =
+                Handle<YieldTermStructure>(),
+            int innerPoints = 32,
+            Real innerStddevs = 7.0);
 };
 
 #endif

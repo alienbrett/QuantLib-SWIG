@@ -183,6 +183,7 @@ QL_DEPRECATED_DISABLE_WARNING
 %include stochasticprocess.i
 %include swap.i
 %include swaption.i
+%include callablerangeaccrualswap.i
 %include swingoption.i
 %include termstructures.i
 %include timebasket.i
