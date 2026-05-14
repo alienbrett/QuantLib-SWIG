@@ -654,6 +654,219 @@ class EssviLocalVolSurface : public LocalVolTermStructure {
         const Handle<Quote>& spot);
 };
 
+// Klassen parametric vol term structure (subclassable smile shape).
+//
+// ParametricVolShape is the abstract C++ base.  Built-in shapes (S3Shape,
+// ...) are concrete subclasses, exposed directly to Python.
+//
+// To plug a Python implementation in, wrap a duck-typed object with
+// .f(z, params) and .dfdz(z, params) methods in a
+// ParametricVolShapeProxy.  The proxy calls back into Python via the
+// C-API (same pattern as FdmStepConditionProxy / FdmInnerValueCalculatorProxy).
+
+%{
+#include <ql/termstructures/volatility/equityfx/parametricvoltermstructure.hpp>
+using QuantLib::ParametricVolShape;
+using QuantLib::S3Shape;
+using QuantLib::JWShape;
+using QuantLib::ParametricVolSlice;
+using QuantLib::ParametricVolTermStructure;
+%}
+
+%shared_ptr(ParametricVolShape);
+class ParametricVolShape {
+  protected:
+    ParametricVolShape();
+  public:
+    virtual ~ParametricVolShape();
+    // Declared on the base so a base-pointer Python call dispatches
+    // polymorphically to the concrete subclass (S3Shape / JWShape /
+    // ParametricVolShapeProxy).  Construction is blocked by the
+    // protected default ctor — these are only callable via the surface.
+    virtual Real f(Real z, const std::vector<Real>& params) const;
+    virtual Real dfdz(Real z, const std::vector<Real>& params) const;
+    virtual Real d2fdz2(Real z, const std::vector<Real>& params,
+                        Real h = 1e-4) const;
+    virtual std::vector<Real> dfdParams(
+        Real z, const std::vector<Real>& params) const;
+};
+
+%shared_ptr(S3Shape);
+class S3Shape : public ParametricVolShape {
+  public:
+    S3Shape();
+    Real f(Real z, const std::vector<Real>& params) const;
+    Real dfdz(Real z, const std::vector<Real>& params) const;
+    Real d2fdz2(Real z, const std::vector<Real>& params,
+                Real h = 1e-4) const;
+    std::vector<Real> dfdParams(
+        Real z, const std::vector<Real>& params) const;
+};
+
+%shared_ptr(JWShape);
+class JWShape : public ParametricVolShape {
+  public:
+    JWShape();
+    Real f(Real z, const std::vector<Real>& params) const;
+    Real dfdz(Real z, const std::vector<Real>& params) const;
+    Real d2fdz2(Real z, const std::vector<Real>& params,
+                Real h = 1e-4) const;
+    std::vector<Real> dfdParams(
+        Real z, const std::vector<Real>& params) const;
+};
+
+#if defined(SWIGPYTHON)
+%{
+class ParametricVolShapeProxy : public ParametricVolShape {
+  public:
+    ParametricVolShapeProxy(PyObject* callback)
+    : callback_(PyPtr::fromBorrowed(callback)) {}
+
+    Real f(Real z, const std::vector<Real>& params) const override {
+        return call("f", z, params);
+    }
+    Real dfdz(Real z, const std::vector<Real>& params) const override {
+        return call("dfdz", z, params);
+    }
+
+  private:
+    Real call(const char* methodName,
+              Real z,
+              const std::vector<Real>& params) const {
+        auto pyList = PyPtr::fromNew(PyList_New(params.size()));
+        for (std::size_t i = 0; i < params.size(); ++i)
+            PyList_SET_ITEM(pyList.get(), i,
+                            PyFloat_FromDouble(params[i]));
+        auto pyResult = PyPtr::fromResult(
+            PyObject_CallMethod(callback_.get(), methodName, "dO",
+                                z, pyList.get()),
+            "failed to call ParametricVolShape callback");
+        return PyFloat_AsDouble(pyResult.get());
+    }
+
+    PyPtr callback_;
+};
+%}
+
+%shared_ptr(ParametricVolShapeProxy);
+class ParametricVolShapeProxy : public ParametricVolShape {
+  public:
+    ParametricVolShapeProxy(PyObject* callback);
+};
+#endif
+
+struct ParametricVolSlice {
+    Real atmIv;
+    std::vector<Real> params;
+};
+
+%template(ParametricVolSliceVector) std::vector<ParametricVolSlice>;
+
+%shared_ptr(ParametricVolTermStructure);
+class ParametricVolTermStructure : public BlackVolTermStructure {
+  public:
+    // Continuous dividend yield only
+    ParametricVolTermStructure(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<ParametricVolSlice>& slices,
+        ext::shared_ptr<ParametricVolShape> shape,
+        Handle<Quote> spot,
+        Handle<YieldTermStructure> riskFreeRate,
+        Handle<YieldTermStructure> dividendYield,
+        const DayCounter& dc = Actual365Fixed());
+
+    // With discrete dividends
+    ParametricVolTermStructure(
+        const Date& referenceDate,
+        const std::vector<Date>& dates,
+        const std::vector<ParametricVolSlice>& slices,
+        ext::shared_ptr<ParametricVolShape> shape,
+        Handle<Quote> spot,
+        Handle<YieldTermStructure> riskFreeRate,
+        Handle<YieldTermStructure> dividendYield,
+        DividendSchedule dividends,
+        const DayCounter& dc = Actual365Fixed());
+
+    // Inspectors
+    Size numSlices() const;
+    const std::vector<ParametricVolSlice>& slices() const;
+    const ParametricVolSlice& slice(Size i) const;
+    const ext::shared_ptr<ParametricVolShape>& shape() const;
+
+    // Direct shape access
+    Real z(Size sliceIdx, Real k) const;
+    Real totalVariance(Size sliceIdx, Real k) const;
+    Real totalVariance(Real k, Time t) const;
+    Real totalVarianceStrikeDerivative(Size sliceIdx, Real k) const;
+    Real totalVarianceStrikeDerivative(Real k, Time t) const;
+    Real totalVarianceStrikeSecondDerivative(Size sliceIdx, Real k) const;
+    Real totalVarianceStrikeSecondDerivative(Real k, Time t) const;
+    Real totalVarianceTimeDerivative(Real k, Time t) const;
+    Real forward(Time t) const;
+
+    // Analytic Dupire local vol — closed form on (S3, JW), one FD pair
+    // on Python-supplied shapes that don't override d2fdz2.
+    Real localVariance(Real k, Time t) const;
+    Real localVol(Real k, Time t) const;
+
+    // Mutators
+    void setSlice(Size i, Real atmIv, const std::vector<Real>& params);
+    void setSlices(const std::vector<ParametricVolSlice>& slices);
+
+    // Batch evaluation
+    std::vector<Real> batchBlackVol(
+        const std::vector<Size>& sliceIndices,
+        const std::vector<Real>& strikes) const;
+    std::vector<Real> batchBlackVolAtTimes(
+        const std::vector<Real>& times,
+        const std::vector<Real>& strikes) const;
+    std::vector<Real> batchImpliedVolGradient(
+        const std::vector<Size>& sliceIndices,
+        const std::vector<Real>& strikes) const;
+    Size nShapeParams() const;
+
+    // Arbitrage checks (Klassen 2017 §3)
+    Real butterflyDensity(Size sliceIdx, Real z, Real h = 1e-4) const;
+    Real butterflyArbViolation(Size sliceIdx,
+                                const std::vector<Real>& zGrid,
+                                Real h = 1e-4) const;
+    Real calendarArbViolation(const std::vector<Real>& kGrid) const;
+
+    // Constraint-grid evaluators (for SLSQP / trust-constr)
+    std::vector<Real> butterflyDensityGrid(
+        const std::vector<Real>& zGrid, Real h = 1e-4) const;
+    std::vector<Real> butterflyDensityGridGradient(
+        const std::vector<Real>& zGrid, Real h = 1e-4) const;
+    std::vector<Real> calendarDeficitGrid(
+        const std::vector<Real>& kGrid) const;
+    std::vector<Real> calendarDeficitGridGradient(
+        const std::vector<Real>& kGrid) const;
+};
+
+
+// Analytic Dupire local vol from a Klassen parametric Black surface.
+// Mirrors EssviLocalVolSurface — the heavy lifting lives on the
+// parametric surface itself; this is just the LocalVolTermStructure
+// adapter so QL engines (FD/MC/trinomial-LV) can consume it.
+
+%{
+#include <ql/termstructures/volatility/equityfx/parametriclocalvolsurface.hpp>
+using QuantLib::ParametricLocalVolSurface;
+%}
+
+%shared_ptr(ParametricLocalVolSurface);
+class ParametricLocalVolSurface : public LocalVolTermStructure {
+  public:
+    ParametricLocalVolSurface(
+        const ext::shared_ptr<ParametricVolTermStructure>& blackSurface,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        const Handle<Quote>& spot);
+    const ext::shared_ptr<ParametricVolTermStructure>& blackSurface() const;
+};
+
+
 // PWL PDF black vol surface (forward-aware, log-moneyness interpolation)
 
 %{
