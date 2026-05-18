@@ -98,6 +98,13 @@ namespace QuantLib {
       public:
         Business252(Calendar c = Brazil());
     };
+    class WeightedDayCounter : public DayCounter {
+      public:
+        WeightedDayCounter(const Date& anchor,
+                           const std::vector<Real>& cumWeights,
+                           Real annualWeight,
+                           const std::string& name = "WeightedDayCounter");
+    };
 
 }
 
