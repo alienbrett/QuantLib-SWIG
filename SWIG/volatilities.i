@@ -669,6 +669,7 @@ class EssviLocalVolSurface : public LocalVolTermStructure {
 using QuantLib::ParametricVolShape;
 using QuantLib::S3Shape;
 using QuantLib::JWShape;
+using QuantLib::K7Shape;
 using QuantLib::ParametricVolSlice;
 using QuantLib::ParametricVolTermStructure;
 %}
@@ -707,6 +708,18 @@ class S3Shape : public ParametricVolShape {
 class JWShape : public ParametricVolShape {
   public:
     JWShape();
+    Real f(Real z, const std::vector<Real>& params) const;
+    Real dfdz(Real z, const std::vector<Real>& params) const;
+    Real d2fdz2(Real z, const std::vector<Real>& params,
+                Real h = 1e-4) const;
+    std::vector<Real> dfdParams(
+        Real z, const std::vector<Real>& params) const;
+};
+
+%shared_ptr(K7Shape);
+class K7Shape : public ParametricVolShape {
+  public:
+    K7Shape();
     Real f(Real z, const std::vector<Real>& params) const;
     Real dfdz(Real z, const std::vector<Real>& params) const;
     Real d2fdz2(Real z, const std::vector<Real>& params,
