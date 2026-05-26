@@ -694,6 +694,47 @@ class MixedSpotVolTermStructure : public BlackVolTermStructure {
     void setFwdDecayTau(Real tau);
 };
 
+// Analytic local-vol surface for the spot-mixture overlay.
+// Density-weighted Dupire — companion to MixedSpotVolTermStructure.
+// Pass an existing analytic base LV (ParametricLocalVolSurface,
+// EssviLocalVolSurface) + base Black handle.  Avoids numerical
+// Dupire (NoExceptLocalVolSurface) for σ_F overlays in FD-LV pricing.
+
+%{
+#include <ql/termstructures/volatility/equityfx/mixedspotlocalvoltermstructure.hpp>
+using QuantLib::MixedSpotLocalVolTermStructure;
+%}
+
+%shared_ptr(MixedSpotLocalVolTermStructure);
+class MixedSpotLocalVolTermStructure : public LocalVolTermStructure {
+  public:
+    MixedSpotLocalVolTermStructure(
+        const Handle<LocalVolTermStructure>& baseLV,
+        const Handle<BlackVolTermStructure>& baseBlack,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        Real sigmaF,
+        Real fwdDecayTau = 0.0);
+
+    MixedSpotLocalVolTermStructure(
+        const Handle<LocalVolTermStructure>& baseLV,
+        const Handle<BlackVolTermStructure>& baseBlack,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        Real sigmaF,
+        Real fwdDecayTau,
+        std::vector<Real> quadNodes,
+        std::vector<Real> quadWeights);
+
+    Real sigmaF() const;
+    Real fwdDecayTau() const;
+
+    void setSigmaF(Real sigmaF);
+    void setFwdDecayTau(Real tau);
+};
+
 // Klassen parametric vol term structure (subclassable smile shape).
 //
 // ParametricVolShape is the abstract C++ base.  Built-in shapes (S3Shape,
