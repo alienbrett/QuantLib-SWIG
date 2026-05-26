@@ -735,6 +735,28 @@ class MixedSpotLocalVolTermStructure : public LocalVolTermStructure {
     void setFwdDecayTau(Real tau);
 };
 
+// Event-aware local-vol surface — wraps a base LV with discrete
+// variance jumps at known event times (LV-spike smearing).
+
+%{
+#include <ql/termstructures/volatility/equityfx/eventvollocalvoltermstructure.hpp>
+using QuantLib::EventVolLocalVolTermStructure;
+%}
+
+%shared_ptr(EventVolLocalVolTermStructure);
+class EventVolLocalVolTermStructure : public LocalVolTermStructure {
+  public:
+    EventVolLocalVolTermStructure(
+        const Handle<LocalVolTermStructure>& baseLV,
+        std::vector<Time> eventTimes,
+        std::vector<Real> eventVariances,
+        Real impulseHalfWidth = 0.5 / 365.0);
+
+    const std::vector<Time>& eventTimes() const;
+    const std::vector<Real>& eventVariances() const;
+    Real impulseHalfWidth() const;
+};
+
 // Klassen parametric vol term structure (subclassable smile shape).
 //
 // ParametricVolShape is the abstract C++ base.  Built-in shapes (S3Shape,
