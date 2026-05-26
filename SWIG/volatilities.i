@@ -654,6 +654,46 @@ class EssviLocalVolSurface : public LocalVolTermStructure {
         const Handle<Quote>& spot);
 };
 
+// Spot-mixture decorator over any Black vol term structure.
+// Implements the σ_F-only random-coefficient overlay from
+// docs/mixture_essvi_spec.md, generic over any parametric base
+// (JW, eSSVI, SABR, PWL, AH, ...).
+
+%{
+#include <ql/termstructures/volatility/equityfx/mixedspotvoltermstructure.hpp>
+using QuantLib::MixedSpotVolTermStructure;
+%}
+
+%shared_ptr(MixedSpotVolTermStructure);
+class MixedSpotVolTermStructure : public BlackVolTermStructure {
+  public:
+    MixedSpotVolTermStructure(
+        const Handle<BlackVolTermStructure>& base,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        Real sigmaF,
+        Real fwdDecayTau = 0.0);
+
+    MixedSpotVolTermStructure(
+        const Handle<BlackVolTermStructure>& base,
+        const Handle<Quote>& spot,
+        const Handle<YieldTermStructure>& riskFreeRate,
+        const Handle<YieldTermStructure>& dividendYield,
+        Real sigmaF,
+        Real fwdDecayTau,
+        std::vector<Real> quadNodes,
+        std::vector<Real> quadWeights);
+
+    Real sigmaF() const;
+    Real fwdDecayTau() const;
+    const std::vector<Real>& quadNodes() const;
+    const std::vector<Real>& quadWeights() const;
+
+    void setSigmaF(Real sigmaF);
+    void setFwdDecayTau(Real tau);
+};
+
 // Klassen parametric vol term structure (subclassable smile shape).
 //
 // ParametricVolShape is the abstract C++ base.  Built-in shapes (S3Shape,
