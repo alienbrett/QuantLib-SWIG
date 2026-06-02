@@ -30,7 +30,9 @@
 %include null.i
 
 %{
+#include <ql/time/daycounters/weighted.hpp>
 using QuantLib::DayCounter;
+using QuantLib::WeightedDayCounter;
 %}
 
 class DayCounter {

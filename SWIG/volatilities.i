@@ -652,6 +652,9 @@ class EssviLocalVolSurface : public LocalVolTermStructure {
         const Handle<YieldTermStructure>& riskFreeRate,
         const Handle<YieldTermStructure>& dividendYield,
         const Handle<Quote>& spot);
+    std::vector<Volatility> localVolGrid(
+        const std::vector<Time>& times,
+        const std::vector<Real>& underlyingLevels) const;
 };
 
 // Spot-mixture decorator over any Black vol term structure.
@@ -733,28 +736,6 @@ class MixedSpotLocalVolTermStructure : public LocalVolTermStructure {
 
     void setSigmaF(Real sigmaF);
     void setFwdDecayTau(Real tau);
-};
-
-// Event-aware local-vol surface — wraps a base LV with discrete
-// variance jumps at known event times (LV-spike smearing).
-
-%{
-#include <ql/termstructures/volatility/equityfx/eventvollocalvoltermstructure.hpp>
-using QuantLib::EventVolLocalVolTermStructure;
-%}
-
-%shared_ptr(EventVolLocalVolTermStructure);
-class EventVolLocalVolTermStructure : public LocalVolTermStructure {
-  public:
-    EventVolLocalVolTermStructure(
-        const Handle<LocalVolTermStructure>& baseLV,
-        std::vector<Time> eventTimes,
-        std::vector<Real> eventVariances,
-        Real impulseHalfWidth = 0.5 / 365.0);
-
-    const std::vector<Time>& eventTimes() const;
-    const std::vector<Real>& eventVariances() const;
-    Real impulseHalfWidth() const;
 };
 
 // Klassen parametric vol term structure (subclassable smile shape).
@@ -993,6 +974,9 @@ class ParametricLocalVolSurface : public LocalVolTermStructure {
         const Handle<YieldTermStructure>& dividendYield,
         const Handle<Quote>& spot);
     const ext::shared_ptr<ParametricVolTermStructure>& blackSurface() const;
+    std::vector<Volatility> localVolGrid(
+        const std::vector<Time>& times,
+        const std::vector<Real>& underlyingLevels) const;
 };
 
 
@@ -1072,6 +1056,13 @@ class PwlPdfVolSurface : public BlackVolTermStructure {
     // Inspectors
     Real callForward(Real x, Time t) const;
     Real pdfValue(Real x, Time t) const;
+
+    // Total variance interface (for Gatheral local vol)
+    Real totalVariance(Real k, Time t) const;
+    Real totalVarianceTimeDerivative(Real k, Time t) const;
+    Real localVariance(Real k, Time t) const;
+    Real localVol(Real k, Time t) const;
+    Real forward(Time t) const;
 };
 
 // PWL PDF local vol surface (analytical Dupire from PDF)
@@ -1089,6 +1080,9 @@ class PwlPdfLocalVolSurface : public LocalVolTermStructure {
         const Handle<YieldTermStructure>& riskFreeRate,
         const Handle<YieldTermStructure>& dividendYield,
         const Handle<Quote>& spot);
+    std::vector<Volatility> localVolGrid(
+        const std::vector<Time>& times,
+        const std::vector<Real>& underlyingLevels) const;
 };
 
 
@@ -1918,6 +1912,28 @@ export_zabrinterpolatedsmilesection_curve(ZabrLocalVolatilityInterpolatedSmileSe
 export_zabrinterpolatedsmilesection_curve(ZabrFullFdInterpolatedSmileSection, ZabrFullFd);
 
 
+%{
+#include <ql/experimental/volatility/zabrswaptionvol.hpp>
+using QuantLib::ZabrSwaptionVol;
+%}
+
+%shared_ptr(ZabrSwaptionVol)
+class ZabrSwaptionVol : public SwaptionVolatilityStructure {
+  public:
+    ZabrSwaptionVol(const Date& referenceDate,
+                    const Calendar& calendar,
+                    const std::vector<Real>& expiryYears,
+                    const std::vector<Real>& tailYears,
+                    const Matrix& atmNormalVol,
+                    const Matrix& beta,
+                    const Matrix& nu,
+                    const Matrix& rho,
+                    Real gamma,
+                    Handle<YieldTermStructure> yieldCurve,
+                    ext::shared_ptr<SwapIndex> swapIndex);
+};
+
+
 %shared_ptr(NoArbSabrSmileSection)
 
 class NoArbSabrSmileSection : public SmileSection {
@@ -2046,6 +2062,43 @@ class AndreasenHugeLocalVolAdapter : public LocalVolTermStructure {
   public:
     explicit AndreasenHugeLocalVolAdapter(
         const ext::shared_ptr<AndreasenHugeVolatilityInterpl>& localVol);
+};
+
+// Multiplicative scaling wrappers around Black/local vol surfaces.
+// Used for scenario state generation where many vol-perturbed surfaces
+// share a single calibrated base. Multiplier is a Quote so it can be
+// updated without rebuilding dependent envs.
+%{
+#include <ql/termstructures/volatility/equityfx/scaledvoltermstructure.hpp>
+using QuantLib::ScaledBlackVolTermStructure;
+using QuantLib::ScaledLocalVolTermStructure;
+using QuantLib::SqrtTimeScaledBlackVolTermStructure;
+%}
+
+%shared_ptr(ScaledBlackVolTermStructure)
+class ScaledBlackVolTermStructure : public BlackVolTermStructure {
+  public:
+    ScaledBlackVolTermStructure(
+        const Handle<BlackVolTermStructure>& base,
+        const Handle<Quote>& multiplier);
+};
+
+%shared_ptr(ScaledLocalVolTermStructure)
+class ScaledLocalVolTermStructure : public LocalVolTermStructure {
+  public:
+    ScaledLocalVolTermStructure(
+        const Handle<LocalVolTermStructure>& base,
+        const Handle<Quote>& multiplier);
+};
+
+%shared_ptr(SqrtTimeScaledBlackVolTermStructure)
+class SqrtTimeScaledBlackVolTermStructure : public BlackVolTermStructure {
+  public:
+    SqrtTimeScaledBlackVolTermStructure(
+        const Handle<BlackVolTermStructure>& base,
+        const Handle<Quote>& multiplier,
+        Time tRef,
+        Time tFloor = 1.0 / 365.0);
 };
 
 %shared_ptr(HestonBlackVolSurface)

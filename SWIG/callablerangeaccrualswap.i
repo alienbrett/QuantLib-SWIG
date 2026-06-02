@@ -33,12 +33,14 @@ class CallableRangeAccrualSwap : public Option {
         ext::shared_ptr<RangeAccrualSwap> swap,
         const ext::shared_ptr<Exercise>& exercise,
         Settlement::Type delivery = Settlement::Physical,
-        Settlement::Method settlementMethod = Settlement::PhysicalOTC);
+        Settlement::Method settlementMethod = Settlement::PhysicalOTC,
+        Real callPrice = 0.0);
 
     bool isExpired() const;
     Settlement::Type settlementType() const;
     Settlement::Method settlementMethod() const;
     Swap::Type type() const;
+    Real callPrice() const;
     const ext::shared_ptr<RangeAccrualSwap>& underlyingSwap() const;
 };
 

@@ -342,7 +342,8 @@ class RangeAccrualSwap : public Swap {
         std::vector<Rate> upperTriggers,
         DayCounter raDayCount,
         BusinessDayConvention paymentConvention = Following,
-        BusinessDayConvention observationConvention = ModifiedFollowing);
+        BusinessDayConvention observationConvention = ModifiedFollowing,
+        bool finalCapitalExchange = false);
 
     Swap::Type type() const;
     const std::vector<Real>& fixedNominal() const;

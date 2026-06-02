@@ -56,6 +56,12 @@ class Instrument : public LazyObject {
     Instrument();
 };
 
+%extend Instrument {
+    Real resultScalar(const std::string& tag) {
+        return $self->result<Real>(tag);
+    }
+};
+
 #if defined(SWIGR)
 %Rruntime %{
 setMethod("summary", "_p_ext__shared_ptrTInstrument_t",
