@@ -205,6 +205,10 @@ class MarkovFunctional : public Gaussian1dModel {
     EndCriteria::Type endCriteria() const;
     const Array& problemValues() const;
     Integer functionEvaluation() const;
+
+    // Vectorized zerobond over an array of state values (one call per (t,T),
+    // amortizes the Gauss-Hermite setup across the whole grid).
+    Array zerobondArray(Time T, Time t, const Array& y) const;
 };
 
 // Pricing Engines
