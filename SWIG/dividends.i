@@ -29,6 +29,13 @@ using QuantLib::Dividend;
 class Dividend : public CashFlow {
   private:
     Dividend();
+  public:
+    // Spot-aware payout: FixedDividend returns its constant amount;
+    // FractionalDividend returns rate * underlying.  Required by FD
+    // engines that simulate spot at each ex-date and by Python callers
+    // that need to introspect the payout shape without throwing on the
+    // no-arg ``amount()`` overload.
+    Real amount(Real underlying) const;
 };
 
 %{
@@ -46,6 +53,9 @@ class FixedDividend : public Dividend {
 class FractionalDividend : public Dividend {
   public:
     FractionalDividend(Rate rate, const Date& date);
+    FractionalDividend(Rate rate, Real nominal, const Date& date);
+    Rate rate() const;
+    Real nominal() const;
 };
 
 
