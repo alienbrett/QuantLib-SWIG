@@ -777,6 +777,7 @@ using QuantLib::S3Shape;
 using QuantLib::JWShape;
 using QuantLib::K5Shape;
 using QuantLib::K7Shape;
+using QuantLib::SplShape;
 using QuantLib::ParametricVolSlice;
 using QuantLib::ParametricVolTermStructure;
 %}
@@ -845,6 +846,26 @@ class K7Shape : public ParametricVolShape {
                 Real h = 1e-4) const;
     std::vector<Real> dfdParams(
         Real z, const std::vector<Real>& params) const;
+};
+
+// SPL: quintic-spline belly + softplus wings.  Unlike the other shapes this
+// one is configured at construction (knot grid + wing switch points), so the
+// parameter count depends on the knots.  The C++ default-arguments use
+// Null<Real>(); they are NOT exposed here -- callers pass the switch points
+// explicitly (chloride defaults them to the outer knots).
+%shared_ptr(SplShape);
+class SplShape : public ParametricVolShape {
+  public:
+    SplShape(const std::vector<Real>& knots,
+             Real switchLeft, Real switchRight);
+    Real f(Real z, const std::vector<Real>& params) const;
+    Real dfdz(Real z, const std::vector<Real>& params) const;
+    Real d2fdz2(Real z, const std::vector<Real>& params,
+                Real h = 1e-4) const;
+    std::vector<Real> dfdParams(
+        Real z, const std::vector<Real>& params) const;
+    Size nParams() const;
+    const std::vector<Real>& knots() const;
 };
 
 #if defined(SWIGPYTHON)
