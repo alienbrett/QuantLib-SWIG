@@ -848,16 +848,17 @@ class K7Shape : public ParametricVolShape {
         Real z, const std::vector<Real>& params) const;
 };
 
-// SPL: quintic-spline belly + softplus wings.  Unlike the other shapes this
-// one is configured at construction (knot grid + wing switch points), so the
-// parameter count depends on the knots.  The C++ default-arguments use
-// Null<Real>(); they are NOT exposed here -- callers pass the switch points
-// explicitly (chloride defaults them to the outer knots).
+// SPL: cubic-B-spline belly + softplus wings.  Unlike the other shapes this one
+// is configured at construction (knot grid, wing switch points, wing ramp
+// sharpness tau), so the parameter count depends on the knots.  tau is CONFIG,
+// not a fitted channel.  The C++ default-arguments use Null<Real>() for the
+// switch points; that is NOT exposed here -- callers pass them explicitly
+// (chloride defaults them to the outer knots).
 %shared_ptr(SplShape);
 class SplShape : public ParametricVolShape {
   public:
     SplShape(const std::vector<Real>& knots,
-             Real switchLeft, Real switchRight);
+             Real switchLeft, Real switchRight, Real tau = 3.0);
     Real f(Real z, const std::vector<Real>& params) const;
     Real dfdz(Real z, const std::vector<Real>& params) const;
     Real d2fdz2(Real z, const std::vector<Real>& params,
@@ -866,6 +867,7 @@ class SplShape : public ParametricVolShape {
         Real z, const std::vector<Real>& params) const;
     Size nParams() const;
     const std::vector<Real>& knots() const;
+    Real tau() const;
 };
 
 #if defined(SWIGPYTHON)
